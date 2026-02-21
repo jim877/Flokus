@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #FAF8F5;
+  --bg-panel: rgba(255, 255, 255, 0.65);
+  --text: #5C5C5C;
+  --text-muted: #7A7A7A;
+  --border: rgba(139, 159, 130, 0.2);
+}
+
+.dark {
+  --bg: #1A1915;
+  --bg-panel: rgba(40, 38, 33, 0.7);
+  --text: #E8E4DC;
+  --text-muted: #9CAF88;
+  --border: rgba(139, 159, 130, 0.15);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Beige gradient (visible) + zen pebbles showing through semi-transparent gradient */
+.zen-bg {
+  position: relative;
+  background-color: #F2F0EA;
+  background-image:
+    linear-gradient(
+      165deg,
+      rgba(253, 252, 250, 0.78) 0%,
+      rgba(248, 246, 242, 0.76) 30%,
+      rgba(243, 241, 235, 0.74) 60%,
+      rgba(238, 235, 228, 0.76) 100%
+    ),
+    url('https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=1600&q=40');
+  background-size: 100% 100%, cover;
+  background-position: 0 0, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.dark .zen-bg {
+  background-color: #1A1915;
+  background-image: linear-gradient(165deg, #1E1D1A 0%, #1C1B18 50%, #1A1915 100%);
+  background-size: 100% 100%;
+}
+
+.zen-bg-warm {
+  position: relative;
+  background-color: #F5EDE4;
+  background-image: linear-gradient(165deg, rgba(252,248,243,0.9) 0%, rgba(248,240,230,0.92) 50%, rgba(243,232,218,0.9) 100%);
+  background-size: 100% 100%;
+}
+
+.dark .zen-bg-warm {
+  background-color: #1C1916;
+  background-image: linear-gradient(165deg, #252019 0%, #1E1B18 50%, #1A1815 100%);
+  background-size: 100% 100%;
+}
+
+.zen-bg-cool {
+  position: relative;
+  background-color: #E8EDF0;
+  background-image: linear-gradient(165deg, rgba(240,248,252,0.92) 0%, rgba(232,242,248,0.9) 50%, rgba(225,238,245,0.92) 100%);
+  background-size: 100% 100%;
+}
+
+.dark .zen-bg-cool {
+  background-color: #15191C;
+  background-image: linear-gradient(165deg, #181C21 0%, #15181C 50%, #12151A 100%);
+  background-size: 100% 100%;
+}
+
+.sidebar-bg {
+  background: linear-gradient(180deg, rgba(253,252,250,0.92) 0%, rgba(248,246,242,0.88) 50%, rgba(243,241,235,0.9) 100%);
+}
+
+.dark .sidebar-bg {
+  background: linear-gradient(180deg, rgba(30,29,26,0.95) 0%, rgba(26,25,21,0.92) 100%);
+}
