@@ -50,6 +50,8 @@ export interface WorkItem {
   priority: Priority
   facility_id: string | null
   owner_id: string | null
+  /** When set, multiple assignees; otherwise owner_id is the single assignee */
+  assignee_ids?: string[]
   is_private: boolean
   status: Status
   attachments: string[]
@@ -68,6 +70,7 @@ export interface WorkItemInsert {
   priority?: Priority
   facility_id?: string | null
   owner_id?: string | null
+  assignee_ids?: string[]
   is_private?: boolean
   status?: Status
   attachments?: string[]
@@ -84,6 +87,7 @@ export interface WorkItemUpdate {
   priority?: Priority
   facility_id?: string | null
   owner_id?: string | null
+  assignee_ids?: string[]
   is_private?: boolean
   status?: Status
   attachments?: string[]

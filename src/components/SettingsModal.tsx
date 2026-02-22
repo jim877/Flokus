@@ -17,6 +17,7 @@ const BACKGROUND_OPTIONS: BackgroundOption[] = [
   { id: 'local-sunrise', label: 'Sunrise mountains', className: 'zen-bg-local-sunrise' },
   { id: 'local-misty-hills', label: 'Misty hills', className: 'zen-bg-local-misty-hills' },
   { id: 'local-vista', label: 'Mountain vista', className: 'zen-bg-local-vista' },
+  { id: 'local-dunes', label: 'Desert dunes', className: 'zen-bg-local-dunes' },
   /* Built-in options */
   { id: 'zen', label: 'Zen pebbles', className: 'zen-bg' },
   { id: 'warm', label: 'Warm gradient', className: 'zen-bg-warm' },

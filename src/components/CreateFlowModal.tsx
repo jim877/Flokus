@@ -11,12 +11,15 @@ interface CreateFlowModalProps {
   onCreate: (flow: Flow) => void
 }
 
+const isWallpaperBackground = (id: string) => id === 'zen' || id.startsWith('local-')
+
 export default function CreateFlowModal({ open, onClose, onCreate }: CreateFlowModalProps) {
   const [name, setName] = useState('')
   const [syncMode, setSyncMode] = useState<'quarter' | 'async'>('quarter')
   const [icon, setIcon] = useState<FlowIconId | ''>('')
   const [colorTheme, setColorTheme] = useState<FlowColorTheme>('teal')
   const [backgroundId, setBackgroundId] = useState('')
+  const [backgroundOverlay, setBackgroundOverlay] = useState(50)
 
   const quarterStart = getCurrentQuarterStartISO()
   const quarterEnd = getCurrentQuarterEndISO()
@@ -36,6 +39,7 @@ export default function CreateFlowModal({ open, onClose, onCreate }: CreateFlowM
       icon: icon || undefined,
       colorTheme: colorTheme || undefined,
       backgroundId: backgroundId || undefined,
+      backgroundOverlay: backgroundId && isWallpaperBackground(backgroundId) ? backgroundOverlay : undefined,
     }
     if (syncMode === 'quarter') {
       flow.quarterStart = quarterStart
@@ -50,6 +54,7 @@ export default function CreateFlowModal({ open, onClose, onCreate }: CreateFlowM
     setIcon('')
     setColorTheme('teal')
     setBackgroundId('')
+    setBackgroundOverlay(50)
     onClose()
   }
 
@@ -113,7 +118,7 @@ export default function CreateFlowModal({ open, onClose, onCreate }: CreateFlowM
             </div>
             <div>
               <span className="text-xs font-medium text-[var(--text-muted)] block mb-2">Background when active (optional)</span>
-              <div className="flex flex-wrap gap-2 mb-4">
+              <div className="flex flex-wrap gap-2 mb-2">
                 {BACKGROUND_OPTIONS.map((opt) => (
                   <button
                     key={opt.id}
@@ -125,6 +130,19 @@ export default function CreateFlowModal({ open, onClose, onCreate }: CreateFlowM
                   </button>
                 ))}
               </div>
+              {backgroundId && isWallpaperBackground(backgroundId) && (
+                <div className="space-y-1 mb-4">
+                  <label className="block text-xs font-medium text-[var(--text)]">Shading: {backgroundOverlay}%</label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={backgroundOverlay}
+                    onChange={(e) => setBackgroundOverlay(Number(e.target.value))}
+                    className="w-full h-2 rounded-lg appearance-none bg-[var(--border)] accent-teal-dark"
+                  />
+                </div>
+              )}
             </div>
             <div>
               <span className="text-xs font-medium text-[var(--text-muted)] block mb-2">Time frame</span>

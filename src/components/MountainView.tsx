@@ -50,6 +50,8 @@ interface MountainViewProps {
   trackByProject?: Record<string, 'on_track' | 'off_track' | null>
   /** Called when user tries to drag onto the mountain while flow is locked */
   onLockedFlowDropAttempt?: () => void
+  /** When true, flash the Future / Show Future row (e.g. after adding an idea while Future is hidden) */
+  futureSectionFlash?: boolean
 }
 
 const ELEVATION_LABELS: string[] = ['Highest impact', 'High priority', 'Important', 'When you can']
@@ -81,6 +83,7 @@ export default function MountainView({
   onShowHelpChange,
   trackByProject = {},
   onLockedFlowDropAttempt,
+  futureSectionFlash = false,
 }: MountainViewProps) {
   const [internalLayers, setInternalLayers] = useState(3)
   const [internalShowHelp, setInternalShowHelp] = useState(true)
@@ -193,18 +196,7 @@ export default function MountainView({
               <span>Sub-tasks: {totalSubDone}/{totalSubTasks} done</span>
             </div>
           )}
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            {(onShowHelpChange !== undefined || controlledShowHelp === undefined) && (
-              <button type="button" onClick={() => setShowHelp(!showHelp)} className="text-xs text-[var(--text-muted)] hover:text-[var(--text)]">{showHelp ? 'Hide help' : 'Show help'}</button>
-            )}
-          </div>
         </div>
-        {showHelp && (
-          <div className="mb-4 p-3 rounded-xl bg-teal-light/10 border border-teal-light/20 text-sm text-[var(--text)]">
-            Your mountain keeps you on track. Top = highest priority. Drag to reorder. Only {maxSlots} items fit; the rest wait in Future.
-          </div>
-        )}
-
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <div className="flex gap-6 max-w-5xl mx-auto items-start">
             <div className="flex-1 min-w-0 space-y-4">
@@ -212,7 +204,7 @@ export default function MountainView({
               return (
               <div key={row} className="space-y-1">
                 <div className="flex justify-center items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider" title="Higher = more important">
+                  <span className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider ring-on-bg px-2 py-0.5 rounded" title="Higher = more important">
                     {ELEVATION_LABELS[row] ?? `Elevation ${row + 1}`}
                   </span>
                 </div>
@@ -254,7 +246,7 @@ export default function MountainView({
                     <button
                       type="button"
                       onClick={() => setLayers(layers - 1)}
-                      className="text-xs font-medium text-teal-dark hover:text-teal-dark/80 hover:underline"
+                      className="text-xs font-medium text-teal-dark hover:text-teal-dark/80 hover:underline text-on-bg ring-on-bg px-2 py-0.5 rounded"
                       title="Remove this empty elevation"
                     >
                       Remove elevation
@@ -268,7 +260,7 @@ export default function MountainView({
                     <button
                       type="button"
                       onClick={() => setLayers(layers + 1)}
-                      className="text-xs font-medium text-teal-dark hover:text-teal-dark/80 hover:underline flex items-center gap-1"
+                      className="text-xs font-medium text-teal-dark hover:text-teal-dark/80 hover:underline flex items-center gap-1 text-on-bg ring-on-bg px-2 py-0.5 rounded"
                       title="Add another elevation to your mountain"
                     >
                       <span className="text-base leading-none">+</span>
@@ -285,12 +277,12 @@ export default function MountainView({
           <div className="mt-8 pt-6 border-t border-[var(--border)]">
             {onShowFutureChange ? (
               <>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <h2 className="text-sm font-medium text-[var(--text-muted)]">Future</h2>
+                <div className={`flex items-center justify-between gap-2 mb-2 rounded-lg px-2 py-1 transition-colors ${futureSectionFlash ? 'future-section-flash' : ''}`}>
+                  <h2 className="text-sm font-medium text-[var(--text-muted)] text-on-bg ring-on-bg px-2 py-0.5 rounded">Future</h2>
                   <button
                     type="button"
                     onClick={() => onShowFutureChange(!showFuture)}
-                    className="text-xs text-[var(--text-muted)] hover:text-teal-dark font-medium"
+                    className={`text-xs font-medium transition-colors text-on-bg ring-on-bg px-2 py-0.5 rounded ${futureSectionFlash ? 'future-section-flash text-teal-dark' : 'text-[var(--text-muted)] hover:text-teal-dark'}`}
                     title={showFuture ? 'Hide Future ideas' : 'Show Future ideas'}
                   >
                     {showFuture ? 'Hide Future' : 'Show Future'}
@@ -302,7 +294,7 @@ export default function MountainView({
               </>
             ) : (
               <>
-                <h2 className="text-sm font-medium text-[var(--text-muted)] mb-2">Future</h2>
+                <h2 className="text-sm font-medium text-[var(--text-muted)] mb-2 text-on-bg ring-on-bg px-2 py-0.5 rounded inline-block">Future</h2>
                 <FutureDropZone futureItems={futureItems} profiles={profiles} selectedId={selectedId} onSelect={onSelect} onMarkDone={onMarkDone} />
               </>
             )}
@@ -355,7 +347,7 @@ function MountainSlot({
       ref={setNodeRef}
       className={`rounded-xl min-h-[72px] min-w-[140px] flex flex-col justify-center transition-all duration-200 ${
         isOver ? 'border-teal-dark/40 bg-teal-light/10 border-2' : hasItem ? (item!.status === 'done' ? 'border-[var(--border)] bg-gray-200/90 dark:bg-white/10 border-2' : 'border-[var(--border)] bg-white/95 dark:bg-[var(--bg-panel)] border-2') : emptySlotStyle
-      } ${item ? 'cursor-pointer' : 'cursor-pointer'}`}
+      } ${isSelected && hasItem ? 'ring-2 ring-teal-dark shadow-md' : ''} ${hasItem ? 'hover:bg-teal-light/10 hover:ring-2 hover:ring-teal-dark/25 hover:shadow-sm' : ''} ${item ? 'cursor-pointer' : 'cursor-pointer'}`}
       onClick={item ? onSelect : () => onEmptySlotClick?.(slotIndex)}
     >
       {item ? (
@@ -371,7 +363,7 @@ function MountainSlot({
           trackStatus={item.type === 'project' ? trackByProject[item.id] ?? null : null}
         />
       ) : (
-        <span className={`text-xs text-center p-2 block ${isActiveAddTarget ? 'text-teal-dark font-medium' : 'text-[var(--text-muted)]'}`}>
+        <span className={`text-xs text-center p-2 block text-on-bg ${isActiveAddTarget ? 'text-teal-dark font-medium' : 'text-[var(--text-muted)]'}`}>
           {isActiveAddTarget ? 'Next idea goes here · type in pill below' : 'Drop here or click to add'}
         </span>
       )}
@@ -474,7 +466,7 @@ function FutureCard({
   return (
     <div
       ref={setNodeRef}
-      className="rounded-lg border border-[var(--border)] bg-[var(--bg-panel)]/90 px-2.5 py-2 min-w-[120px] cursor-pointer"
+      className="rounded-lg border border-[var(--border)] bg-gray-100/90 dark:bg-white/10 px-2.5 py-2 min-w-[120px] cursor-pointer transition-all duration-200 hover:bg-teal-light/15 hover:ring-2 hover:ring-teal-dark/25 hover:shadow-sm"
       onClick={() => _onSelectFuture(isSelected ? null : item.id)}
       {...attributes}
       {...listeners}
@@ -504,7 +496,7 @@ function FutureDropZone({
     <div
       ref={setNodeRef}
       className={`rounded-xl border-2 min-h-[80px] p-3 transition-colors ${
-        futureItems.length === 0 ? 'border-dashed border-teal-dark/25 bg-white/40 dark:bg-white/5' : 'border-[var(--border)] bg-white/90 dark:bg-white/15'
+        futureItems.length === 0 ? 'border-dashed border-teal-dark/25 bg-white/40 dark:bg-white/5' : 'border-[var(--border)] bg-transparent'
       } ${isOver ? '!border-teal-dark/40 !bg-teal-light/10' : ''}`}
     >
       {futureItems.length === 0 ? (

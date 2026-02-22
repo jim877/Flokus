@@ -155,13 +155,25 @@ body {
   background-repeat: no-repeat, no-repeat;
 }
 
+.zen-bg-local-dunes {
+  position: relative;
+  background-color: #EDE8E2;
+  background-image:
+    linear-gradient(165deg, rgba(252,249,245,var(--bg-overlay-alpha,0.78)) 0%, rgba(247,242,235,var(--bg-overlay-alpha,0.76)) 50%, rgba(242,236,228,var(--bg-overlay-alpha,0.76)) 100%),
+    url('/wolfgang-hasselmann-Fd01B6nNPbo-unsplash.png');
+  background-size: 100% 100%, cover;
+  background-position: 0 0, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
 .dark .zen-bg-local-valley,
 .dark .zen-bg-local-misty-peaks,
 .dark .zen-bg-local-stones,
 .dark .zen-bg-local-alpine-lake,
 .dark .zen-bg-local-sunrise,
 .dark .zen-bg-local-misty-hills,
-.dark .zen-bg-local-vista {
+.dark .zen-bg-local-vista,
+.dark .zen-bg-local-dunes {
   background-color: #1A1915;
   background-image: linear-gradient(165deg, #1E1D1A 0%, #1C1B18 50%, #1A1915 100%);
   background-size: 100% 100%;
@@ -320,3 +332,42 @@ body {
 .empty-slot-active {
   animation: empty-slot-pulse 2s ease-in-out infinite;
 }
+
+/* When using a wallpaper: 50% transparent overlay behind text only (no shadow) */
+.ring-on-bg {
+  background: rgba(255,255,255,0.5);
+}
+.dark .ring-on-bg {
+  background: rgba(26,25,21,0.5);
+}
+
+[data-wallpaper="true"] .wallpaper-content h1,
+[data-wallpaper="true"] .wallpaper-content h2,
+[data-wallpaper="true"] .wallpaper-content h3,
+[data-wallpaper="true"] .wallpaper-content h4,
+[data-wallpaper="true"] .wallpaper-content p,
+[data-wallpaper="true"] .wallpaper-content li {
+  background: rgba(255,255,255,0.5);
+  padding: 0.06em 0.2em;
+  margin: -0.06em -0.2em;
+  border-radius: 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.dark[data-wallpaper="true"] .wallpaper-content h1,
+.dark[data-wallpaper="true"] .wallpaper-content h2,
+.dark[data-wallpaper="true"] .wallpaper-content h3,
+.dark[data-wallpaper="true"] .wallpaper-content h4,
+.dark[data-wallpaper="true"] .wallpaper-content p,
+.dark[data-wallpaper="true"] .wallpaper-content li {
+  background: rgba(26,25,21,0.5);
+}
+
+/* Formatted task title (bold, lists, etc.) in view mode */
+.task-formatted-title p,
+.task-formatted-title div { margin: 0 0 0.25em; }
+.task-formatted-title p:last-child,
+.task-formatted-title div:last-child { margin-bottom: 0; }
+.task-formatted-title ol,
+.task-formatted-title ul { margin: 0.25em 0; padding-left: 1.25em; }
+.task-formatted-title li { margin: 0.1em 0; }

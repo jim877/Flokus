@@ -8,14 +8,17 @@ interface FlowEditModalProps {
   open: boolean
   flow: Flow | null
   onClose: () => void
-  onSave: (updates: Partial<Pick<Flow, 'name' | 'icon' | 'colorTheme' | 'backgroundId'>>) => void
+  onSave: (updates: Partial<Pick<Flow, 'name' | 'icon' | 'colorTheme' | 'backgroundId' | 'backgroundOverlay'>>) => void
 }
+
+const isWallpaperBackground = (id: string) => id === 'zen' || id.startsWith('local-')
 
 export default function FlowEditModal({ open, flow, onClose, onSave }: FlowEditModalProps) {
   const [name, setName] = useState('')
   const [icon, setIcon] = useState<FlowIconId | ''>('')
   const [colorTheme, setColorTheme] = useState<FlowColorTheme>('teal')
   const [backgroundId, setBackgroundId] = useState('')
+  const [backgroundOverlay, setBackgroundOverlay] = useState(50)
 
   useEffect(() => {
     if (flow) {
@@ -23,6 +26,7 @@ export default function FlowEditModal({ open, flow, onClose, onSave }: FlowEditM
       setIcon(flow.icon ?? '')
       setColorTheme(flow.colorTheme ?? 'teal')
       setBackgroundId(flow.backgroundId ?? '')
+      setBackgroundOverlay(flow.backgroundOverlay ?? 50)
     }
   }, [flow])
 
@@ -35,6 +39,7 @@ export default function FlowEditModal({ open, flow, onClose, onSave }: FlowEditM
       icon: icon || undefined,
       colorTheme: colorTheme || undefined,
       backgroundId: backgroundId || undefined,
+      backgroundOverlay: backgroundId && isWallpaperBackground(backgroundId) ? backgroundOverlay : undefined,
     })
     onClose()
   }
@@ -119,6 +124,22 @@ export default function FlowEditModal({ open, flow, onClose, onSave }: FlowEditM
                   <button type="button" onClick={() => setBackgroundId('')} className="text-xs text-[var(--text-muted)] hover:text-[var(--text)]">
                     Use default background
                   </button>
+                )}
+                {backgroundId && isWallpaperBackground(backgroundId) && (
+                  <div className="space-y-2 pt-2">
+                    <label className="block text-sm font-medium text-[var(--text)]">
+                      Shading (overlay): {backgroundOverlay}%
+                    </label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={backgroundOverlay}
+                      onChange={(e) => setBackgroundOverlay(Number(e.target.value))}
+                      className="w-full h-2 rounded-lg appearance-none bg-[var(--border)] accent-teal-dark"
+                    />
+                    <p className="text-xs text-[var(--text-muted)]">Higher = more faded background for text readability.</p>
+                  </div>
                 )}
               </div>
             </div>

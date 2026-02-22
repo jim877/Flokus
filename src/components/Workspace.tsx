@@ -56,6 +56,16 @@ export default function Workspace() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [highlightedId, setHighlightedId] = useState<string | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [rightTrayOpen, setRightTrayOpen] = useState(() => {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const v = localStorage.getItem('flokus-right-tray-open')
+        if (v === '0' || v === 'false') return false
+        if (v === '1' || v === 'true') return true
+      } catch (_) {}
+    }
+    return true
+  })
   const [searchQuery, setSearchQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const [logoSpinning, setLogoSpinning] = useState(false)
@@ -267,10 +277,13 @@ export default function Workspace() {
 
   const effectiveBackgroundId = currentFlow?.backgroundId || backgroundId
   const bgClass = BACKGROUND_OPTIONS.find((o) => o.id === effectiveBackgroundId)?.className ?? 'zen-bg'
+  const isWallpaper = effectiveBackgroundId === 'zen' || effectiveBackgroundId.startsWith('local-')
+  const effectiveOverlay = currentFlow?.backgroundOverlay != null ? currentFlow.backgroundOverlay : backgroundOverlay
   return (
     <div
       className={`h-screen flex flex-col ${bgClass}`}
-      style={{ ['--bg-overlay-alpha' as string]: backgroundOverlay / 100 }}
+      style={{ ['--bg-overlay-alpha' as string]: effectiveOverlay / 100 }}
+      data-wallpaper={isWallpaper ? 'true' : undefined}
     >
       <TopBar
         userEmail={user?.email ?? ''}
@@ -308,6 +321,8 @@ export default function Workspace() {
           onAddFlowClick={() => setCreateFlowOpen(true)}
           onMeetingClick={() => {
             setMeetingFlowId(currentFlowId)
+            setSelectedId(null)
+            setDrawerExpanded(false)
             setMeetingTrackByProject({})
             setMeetingStep('review')
             setMeetingLogged(false)
@@ -317,10 +332,6 @@ export default function Workspace() {
           futureSectionFlash={futureSectionFlash}
           profiles={profiles}
           onAddTeammate={addProfile}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          searchOpen={searchOpen}
-          onSearchOpenChange={setSearchOpen}
           viewMode={viewMode}
           onViewModeChange={(mode) => {
             setMainView('workspace')
@@ -329,28 +340,9 @@ export default function Workspace() {
             setViewMode(mode)
           }}
         />
-        <div className="flex-1 min-w-0 flex min-h-0">
+        <div className={`flex-1 min-w-0 flex min-h-0 ${isWallpaper ? 'wallpaper-content' : ''}`}>
           <main className="flex-1 min-w-0 flex relative min-h-0">
-          {viewMode === 'mountain' && selectedItem && drawerExpanded ? (
-            <div className="flex-1 min-w-0 flex min-h-0">
-              <DrawerItemView
-                item={selectedItem}
-                profiles={profiles}
-                onClose={() => { setSelectedId(null); setDrawerExpanded(false) }}
-                onExpand={() => setDrawerExpanded(true)}
-                onCollapse={() => setDrawerExpanded(false)}
-                onUpdate={updateItem}
-                onDelete={deleteItem}
-                onMarkDone={handleMarkDone}
-                getProjectChildren={getProjectChildren}
-                onAddSubTask={selectedItem.type === 'project' ? (title, ownerId) => addItem(selectedItem.section, { type: 'task', title, parent_id: selectedItem.id, owner_id: ownerId }) : undefined}
-                reorderProjectSteps={reorderProjectSteps}
-                removeStepFromProject={removeStepFromProject}
-                completingId={completingId}
-                expanded
-              />
-            </div>
-          ) : viewMode === 'mountain' ? (
+          {viewMode === 'mountain' ? (
             <div className="flex-1 min-w-0 flex min-h-0">
               <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
               <MountainView
@@ -388,16 +380,9 @@ export default function Workspace() {
                     return next
                   })
                 }}
-                showHelp={mountainPrefs.showHelp ?? true}
-                onShowHelpChange={(showHelp) => {
-                  setMountainPrefs((p) => {
-                    const next = { ...p, showHelp }
-                    try { localStorage.setItem(mountainStorageKey('prefs'), JSON.stringify(next)) } catch (_) {}
-                    return next
-                  })
-                }}
                 trackByProject={meetingTrackByProject}
                 onLockedFlowDropAttempt={() => setLockedDropToast(true)}
+                futureSectionFlash={futureSectionFlash}
               />
               </div>
               {selectedItem ? (
@@ -411,62 +396,98 @@ export default function Workspace() {
                   onDelete={deleteItem}
                   onMarkDone={handleMarkDone}
                   getProjectChildren={getProjectChildren}
-                  onAddSubTask={selectedItem.type === 'project' ? (title, ownerId) => addItem(selectedItem.section, { type: 'task', title, parent_id: selectedItem.id, owner_id: ownerId }) : undefined}
+                  onAddSubTask={(title, ownerId) => addItem(selectedItem.section, { type: 'task', title, parent_id: selectedItem.id, owner_id: ownerId })}
                   reorderProjectSteps={reorderProjectSteps}
                   removeStepFromProject={removeStepFromProject}
                   completingId={completingId}
-                  expanded={false}
+                  expanded={drawerExpanded}
                 />
-              ) : currentFlow?.status === 'new' ? (
-                <aside className="w-64 flex-shrink-0 border-l border-[var(--border)] bg-[var(--bg-panel)] backdrop-blur-sm flex flex-col overflow-hidden">
-                  <div className="p-3 border-b border-[var(--border)]">
-                    <h3 className="text-sm font-semibold text-teal-dark">Set up your 90-day flow</h3>
-                  </div>
-                  <div className="flex-1 overflow-auto p-3 space-y-3 text-sm text-[var(--text)]">
-                    {canLockFlow && validMountainOrder.length >= mountainMaxSlots && (
-                      <div className="p-3 rounded-xl bg-teal-light/15 border border-teal-light/40">
-                        <p className="text-sm font-medium text-teal-dark">Ready to commit and lock your flow to create a Quarterly Focus.</p>
-                        <p className="text-xs text-[var(--text-muted)] mt-1">Use <strong>Lock for quarter</strong> in the left tray when you’re ready.</p>
-                      </div>
-                    )}
-                    <p className="text-xs text-[var(--text-muted)]">Add and edit projects here or on the mountain.</p>
-                    <button
-                      type="button"
-                      onClick={() => setIdeaPillOpen(true)}
-                      className="w-full py-2 px-3 rounded-lg border border-teal-dark/30 bg-teal-light/10 text-teal-dark text-sm font-medium hover:bg-teal-light/20 transition-colors"
-                    >
-                      + Add project
-                    </button>
-                    <div>
-                      <h4 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">On your mountain</h4>
-                      <ul className="space-y-0.5">
-                        {validMountainOrder.map((id) => {
-                          const item = allItems.find((i) => i.id === id)
-                          if (!item) return null
-                          return (
-                            <li key={id}>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedId(selectedId === id ? null : id)}
-                                className={`w-full text-left px-2 py-1.5 rounded-lg text-sm truncate block transition-colors ${selectedId === id ? 'bg-teal-light/20 text-teal-dark' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
-                              >
-                                {item.title || 'Untitled'}
-                              </button>
-                            </li>
-                          )
-                        })}
-                        {validMountainOrder.length === 0 && (
-                          <li className="text-xs text-[var(--text-muted)] px-2 py-1.5">No projects yet. Add one above or drag from Future.</li>
-                        )}
-                      </ul>
+              ) : (currentFlow?.status === 'new' || currentFlow?.isLocked) ? (
+                rightTrayOpen ? (
+                  <aside className="w-64 flex-shrink-0 border-l border-[var(--border)] bg-[var(--bg-panel)] backdrop-blur-sm flex flex-col overflow-hidden">
+                    <div className="flex items-center justify-between p-3 border-b border-[var(--border)]">
+                      <h3 className="text-sm font-semibold text-teal-dark">
+                        {currentFlow?.status === 'new' ? 'Set up & help' : 'Help'}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => { setRightTrayOpen(false); try { localStorage.setItem('flokus-right-tray-open', '0') } catch (_) {} }}
+                        className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-black/5 dark:hover:bg-white/5"
+                        aria-label="Close side panel"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
                     </div>
-                    <ol className="space-y-1.5 list-decimal list-inside text-xs text-[var(--text-muted)] pt-2 border-t border-[var(--border)]">
-                      <li>Prioritize by dragging on the mountain (top = highest impact).</li>
-                      <li>Add or remove elevations below the mountain.</li>
-                      <li>Lock when ready to commit.</li>
-                    </ol>
-                  </div>
-                </aside>
+                    <div className="flex-1 overflow-auto p-3 space-y-3 text-sm text-[var(--text)]">
+                      <div className="p-3 rounded-xl bg-teal-light/10 border border-teal-light/20 text-xs text-[var(--text)]">
+                        <p className="font-medium text-teal-dark mb-1">90-day mountain</p>
+                        <p>Top = highest priority. Drag to reorder. Only {mountainMaxSlots} items fit; the rest wait in Future. You can still add and edit tasks within your projects even when the flow is locked.</p>
+                      </div>
+                      {currentFlow?.status === 'new' && (
+                        <>
+                          {canLockFlow && validMountainOrder.length >= mountainMaxSlots && (
+                            <div className="p-3 rounded-xl bg-teal-light/15 border border-teal-light/40">
+                              <p className="text-sm font-medium text-teal-dark">Ready to commit and lock your flow to create a Quarterly Focus.</p>
+                              <p className="text-xs text-[var(--text-muted)] mt-1">Use <strong>Lock for quarter</strong> in the left tray when you’re ready.</p>
+                            </div>
+                          )}
+                          <p className="text-xs text-[var(--text-muted)]">Add and edit projects here or on the mountain.</p>
+                          <button
+                            type="button"
+                            onClick={() => setIdeaPillOpen(true)}
+                            className="w-full py-2 px-3 rounded-lg border border-teal-dark/30 bg-teal-light/10 text-teal-dark text-sm font-medium hover:bg-teal-light/20 transition-colors"
+                          >
+                            + Add project
+                          </button>
+                        </>
+                      )}
+                      <div>
+                        <h4 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">On your mountain</h4>
+                        <ul className="space-y-0.5">
+                          {validMountainOrder.map((id) => {
+                            const item = allItems.find((i) => i.id === id)
+                            if (!item) return null
+                            return (
+                              <li key={id}>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedId(selectedId === id ? null : id)}
+                                  className={`w-full text-left px-2 py-1.5 rounded-lg text-sm truncate block transition-colors ${selectedId === id ? 'bg-teal-light/20 text-teal-dark' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
+                                >
+                                  {item.title || 'Untitled'}
+                                </button>
+                              </li>
+                            )
+                          })}
+                          {validMountainOrder.length === 0 && (
+                            <li className="text-xs text-[var(--text-muted)] px-2 py-1.5">No projects yet. Add one above or drag from Future.</li>
+                          )}
+                        </ul>
+                      </div>
+                      {currentFlow?.status === 'new' && (
+                        <ol className="space-y-1.5 list-decimal list-inside text-xs text-[var(--text-muted)] pt-2 border-t border-[var(--border)]">
+                          <li>Prioritize by dragging on the mountain (top = highest impact).</li>
+                          <li>Add or remove elevations below the mountain.</li>
+                          <li>Lock when ready to commit.</li>
+                        </ol>
+                      )}
+                    </div>
+                  </aside>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setRightTrayOpen(true); try { localStorage.setItem('flokus-right-tray-open', '1') } catch (_) {} }}
+                    className="flex-shrink-0 self-center w-8 h-16 rounded-l-lg border border-r-0 border-[var(--border)] bg-[var(--bg-panel)] backdrop-blur-sm flex items-center justify-center text-[var(--text-muted)] hover:text-teal-dark hover:bg-teal-light/10 transition-colors"
+                    aria-label="Open help panel"
+                    title="Open help panel"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                    </svg>
+                  </button>
+                )
               ) : null}
             </div>
           ) : selectedItem ? (
@@ -586,7 +607,7 @@ export default function Workspace() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 dark:bg-black/65 backdrop-blur-sm" onClick={() => setLockUnlockModal(null)}>
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-[var(--border)] shadow-2xl max-w-sm w-full p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-[var(--text)]">Confirm your 90-day commitment</h3>
-            <p className="text-sm text-[var(--text-muted)]">By locking this flow, you’re agreeing to this 90-day focus. You can unlock later if you need to change direction.</p>
+            <p className="text-sm text-[var(--text-muted)]">By locking this flow, you’re agreeing to this 90-day focus. You can unlock later if you need to change direction. You can still add and edit tasks within your projects when the flow is locked.</p>
             <div className="flex flex-col gap-2 pt-2">
               {mountainProjectCount === 0 ? (
                 <p className="text-sm text-amber-700 dark:text-amber-300">Add at least one project to your mountain before locking.</p>
@@ -615,7 +636,7 @@ export default function Workspace() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 dark:bg-black/65 backdrop-blur-sm" onClick={() => setLockUnlockModal(null)}>
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-[var(--border)] shadow-2xl max-w-sm w-full p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-[var(--text)]">Unlock this flow?</h3>
-            <p className="text-sm text-[var(--text-muted)]">Best practices suggest waiting until the end of your 90-day commitment before changing focus. Unlock anyway to edit your project list.</p>
+            <p className="text-sm text-[var(--text-muted)]">Best practices suggest waiting until the end of your 90-day commitment before changing focus. Unlock only if you need to change which projects are on the mountain — you can add and edit tasks within projects while locked.</p>
             <div className="flex flex-col gap-2 pt-2">
               <button
                 type="button"

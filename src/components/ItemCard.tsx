@@ -98,8 +98,6 @@ export default function ItemCard({ item, profiles, isSelected, isHighlighted, on
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
           </span>
-        ) : displayProfiles.length > 0 ? (
-          <AvatarStack profiles={displayProfiles} ownerId={displayOwnerId} maxVisible={2} onMarkDone={() => item.status !== 'done' && onMarkDone?.(item.id)} isDone={item.status === 'done'} />
         ) : (
           <button
             type="button"
@@ -138,8 +136,14 @@ export default function ItemCard({ item, profiles, isSelected, isHighlighted, on
         )}
       </div>
       <div className="flex items-center gap-1.5 flex-shrink-0">
-        {item.type === 'project' && displayProfiles.length > 0 && (
-          <AvatarStack profiles={displayProfiles} ownerId={displayOwnerId} className="flex-shrink-0" />
+        {displayProfiles.length > 0 && (
+          <AvatarStack
+            profiles={displayProfiles}
+            ownerId={displayOwnerId}
+            className="flex-shrink-0"
+            onMarkDone={item.type === 'task' ? () => item.status !== 'done' && onMarkDone?.(item.id) : undefined}
+            isDone={item.type === 'task' ? item.status === 'done' : undefined}
+          />
         )}
         {item.is_private && (
           <span className="text-[var(--text-muted)]" title="Private">

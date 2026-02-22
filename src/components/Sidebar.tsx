@@ -40,8 +40,8 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, onToggleCollapse, onSectionClick, flows = [], currentFlowId = '', onFlowChange, onLockFlowClick, onUnlockFlowClick, flowIsLocked = false, canLockFlow = false, onEditFlowClick, onAddFlowClick, onMeetingClick, activeSectionId, futureSectionFlash = false, profiles: _profiles = [], onAddTeammate: _onAddTeammate, searchQuery = '', onSearchChange, searchOpen, onSearchOpenChange, viewMode = 'mountain', onViewModeChange }: SidebarProps) {
   return (
     <aside
-      className={`flex-shrink-0 border-r border-[var(--border)] sidebar-bg backdrop-blur-sm flex flex-col transition-[width] duration-200 ${
-        collapsed ? 'w-12' : 'w-40'
+      className={`flex-shrink-0 border-r border-[var(--border)] sidebar-bg backdrop-blur-sm flex flex-col transition-[width] duration-200 overflow-y-auto ${
+        collapsed ? 'w-16' : 'w-40'
       }`}
     >
       <button
@@ -52,35 +52,6 @@ export default function Sidebar({ collapsed, onToggleCollapse, onSectionClick, f
       >
         <FlokusLogo className={`flex-shrink-0 ${collapsed ? 'w-7 h-7' : 'w-8 h-8'}`} />
       </button>
-      {onSearchOpenChange && (
-        <div className={`px-2 py-1 ${collapsed ? 'flex justify-center' : ''}`}>
-          <button
-            type="button"
-            onClick={() => onSearchOpenChange(!searchOpen)}
-            className={`w-full flex items-center gap-2 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-black/5 dark:hover:bg-white/5 transition-colors ${
-              collapsed ? 'justify-center p-2' : 'px-2.5 py-2 text-left'
-            }`}
-            aria-label="Search"
-          >
-            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            {!collapsed && <span>Search</span>}
-          </button>
-          {searchOpen && !collapsed && (
-            <div className="px-1 pb-2">
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => onSearchChange?.(e.target.value)}
-                placeholder="Search tasks…"
-                className="attention-swirl w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-white dark:bg-white/10 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-teal-light/30"
-                autoFocus
-              />
-            </div>
-          )}
-        </div>
-      )}
       {onViewModeChange && (
         <div className={`px-2 py-1 ${collapsed ? 'flex justify-center' : ''}`}>
           <div className={`flex rounded-lg border border-[var(--border)] bg-black/[0.03] p-0.5 ${collapsed ? 'flex-col' : ''}`}>
@@ -93,8 +64,8 @@ export default function Sidebar({ collapsed, onToggleCollapse, onSectionClick, f
           </div>
         </div>
       )}
-      {flows.length > 0 && onFlowChange && (
-        <div className={`px-2 py-1 ${collapsed ? 'flex justify-center' : ''}`}>
+      {onFlowChange && (
+        <div className={`py-1 ${collapsed ? 'flex flex-col items-center px-1.5' : 'px-2'}`}>
           {collapsed ? (
             <div className="w-6 border-t border-[var(--border)] my-0.5" aria-hidden />
           ) : (
@@ -102,7 +73,21 @@ export default function Sidebar({ collapsed, onToggleCollapse, onSectionClick, f
               Flows
             </div>
           )}
-          <div className="space-y-0.5">
+          {onAddFlowClick && (
+            <button
+              type="button"
+              onClick={onAddFlowClick}
+              className={`w-full flex items-center gap-2 rounded-lg text-sm font-medium text-teal-dark hover:bg-teal-light/20 transition-colors ${collapsed ? 'justify-center p-2' : 'px-2.5 py-2 text-left'}`}
+              title="New 90-day flow"
+            >
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              {!collapsed && <span>New flow</span>}
+            </button>
+          )}
+          {flows.length > 0 && (
+          <div className="space-y-0.5 mt-0.5">
             {flows.map((f) => {
               const isCurrent = currentFlowId === f.id
               const theme = (f.colorTheme && FLOW_COLOR_CLASSES[f.colorTheme]) ? FLOW_COLOR_CLASSES[f.colorTheme] : FLOW_COLOR_CLASSES.teal
@@ -111,15 +96,15 @@ export default function Sidebar({ collapsed, onToggleCollapse, onSectionClick, f
               return (
                 <div
                   key={f.id}
-                  className={`w-full rounded-lg text-sm font-medium transition-colors ${isCurrent ? 'bg-teal-light/20 text-teal-dark dark:text-teal-light' : 'text-[var(--text-muted)]'} ${collapsed ? 'flex flex-col items-center justify-center p-2' : 'flex items-center gap-2 min-w-0 px-2.5 py-2'}`}
+                  className={`w-full rounded-lg text-sm font-medium transition-colors ${isCurrent ? `${theme.bg} ${theme.text}` : 'text-[var(--text-muted)]'} ${collapsed ? 'flex flex-col items-center justify-center p-1.5' : 'flex items-center gap-2 min-w-0 px-2.5 py-2'}`}
                 >
                   <button
                     type="button"
                     onClick={() => onFlowChange(f.id)}
-                    className={`flex items-center gap-2 min-w-0 flex-1 text-left rounded-lg transition-colors ${collapsed ? 'flex flex-col p-0' : ''} ${isCurrent ? '' : 'hover:text-[var(--text)] hover:bg-black/5 dark:hover:bg-white/5'}`}
+                    className={`flex items-center gap-2 min-w-0 flex-1 text-left rounded-lg transition-colors ${collapsed ? 'flex flex-col p-0' : ''} ${isCurrent ? 'font-semibold' : 'hover:text-[var(--text)] hover:bg-black/5 dark:hover:bg-white/5'}`}
                     title={f.name}
                   >
-                    <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white font-semibold text-xs ${badgeBg}`} aria-hidden>
+                    <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white font-semibold text-xs leading-none ${badgeBg}`} aria-hidden>
                       {letter}
                     </span>
                     {!collapsed && <span className="truncate flex-1 min-w-0">{f.name}</span>}
@@ -141,44 +126,32 @@ export default function Sidebar({ collapsed, onToggleCollapse, onSectionClick, f
               )
             })}
           </div>
-          {onAddFlowClick && (
-            <button
-              type="button"
-              onClick={onAddFlowClick}
-              className={`w-full flex items-center gap-2 rounded-lg text-sm font-medium text-teal-dark hover:bg-teal-light/20 transition-colors mt-1 ${collapsed ? 'justify-center p-2' : 'px-2.5 py-2 text-left'}`}
-              title="New 90-day flow"
-            >
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              {!collapsed && <span>New flow</span>}
-            </button>
           )}
-          {currentFlowId && (canLockFlow || flowIsLocked) && (
-            <div className={`mt-2 pt-2 border-t border-[var(--border)] ${collapsed ? 'flex justify-center' : ''}`}>
+          {!collapsed && currentFlowId && (canLockFlow || flowIsLocked) && (
+            <div className="mt-2 pt-2 border-t border-[var(--border)]">
               {flowIsLocked && onUnlockFlowClick ? (
                 <button
                   type="button"
                   onClick={() => onUnlockFlowClick(currentFlowId)}
-                  className={`w-full flex items-center gap-2 rounded-lg text-sm font-medium border-2 border-amber-500/50 bg-amber-500/20 text-amber-800 dark:text-amber-200 hover:bg-amber-500/25 transition-colors ${collapsed ? 'justify-center p-2' : 'px-2.5 py-2 text-left'}`}
+                  className="w-full flex items-center gap-2 rounded-lg text-sm font-medium border-2 border-amber-500/50 bg-amber-500/20 text-amber-800 dark:text-amber-200 hover:bg-amber-500/25 transition-colors px-2.5 py-2 text-left"
                   title="Flow is locked (committed). Unlock to edit project list"
                 >
                   <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                   </svg>
-                  {!collapsed && <span>Unlock</span>}
+                  <span>Unlock</span>
                 </button>
               ) : canLockFlow && onLockFlowClick ? (
                 <button
                   type="button"
                   onClick={() => onLockFlowClick(currentFlowId)}
-                  className={`w-full flex items-center gap-2 rounded-lg text-sm font-medium text-teal-dark hover:bg-teal-light/20 transition-colors ${collapsed ? 'justify-center p-2' : 'px-2.5 py-2 text-left'}`}
+                  className="w-full flex items-center gap-2 rounded-lg text-sm font-medium text-teal-dark hover:bg-teal-light/20 transition-colors px-2.5 py-2 text-left"
                   title="Lock flow to start your 90-day quarter"
                 >
                   <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  {!collapsed && <span>Lock for quarter</span>}
+                  <span>Lock for quarter</span>
                 </button>
               ) : null}
             </div>

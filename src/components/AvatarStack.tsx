@@ -49,7 +49,7 @@ export default function AvatarStack({ profiles, ownerId, maxVisible = 3, classNa
         {visible.map((p, i) => (
           <div
             key={p.id}
-            className={`ring-2 ring-[var(--bg-panel)] dark:ring-[var(--bg)] rounded-full flex-shrink-0 ${isDone ? 'opacity-75' : ''}`}
+            className={`rounded-full flex-shrink-0 ${isDone ? 'opacity-75' : ''}`}
             style={{ marginLeft: i === 0 ? 0 : -OVERLAP }}
           >
             <TeamAvatar profile={p} size="sm" className="w-6 h-6 text-[10px]" />
@@ -57,7 +57,7 @@ export default function AvatarStack({ profiles, ownerId, maxVisible = 3, classNa
         ))}
         {hasMore && (
           <span
-            className="w-6 h-6 rounded-full bg-teal-light/30 text-teal-dark text-[10px] font-medium flex items-center justify-center ring-2 ring-[var(--bg-panel)] dark:ring-[var(--bg)] flex-shrink-0"
+            className="w-6 h-6 rounded-full bg-teal-light/30 text-teal-dark text-[10px] font-medium flex items-center justify-center flex-shrink-0"
             style={{ marginLeft: -OVERLAP }}
           >
             +{rest.length}

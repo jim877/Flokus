@@ -51,16 +51,16 @@ export function TeamAvatar({
       <img
         src={profile.avatar_url}
         alt=""
-        className={`rounded-full object-cover flex-shrink-0 ${sizeClass} ${className}`}
+        className={`rounded-full object-cover flex-shrink-0 object-center ${sizeClass} ${className}`}
       />
     )
   }
 
   return (
     <div
-      className={`rounded-full flex items-center justify-center font-semibold flex-shrink-0 ${sizeClass} ${color?.bg ?? 'bg-teal-600'} ${color?.text ?? 'text-white'} ${className}`}
+      className={`rounded-full flex items-center justify-center font-semibold flex-shrink-0 leading-none select-none ${sizeClass} ${color?.bg ?? 'bg-teal-600'} ${color?.text ?? 'text-white'} ${className}`}
     >
-      {initials}
+      <span className="leading-none">{initials}</span>
     </div>
   )
 }

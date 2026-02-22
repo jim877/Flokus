@@ -12,6 +12,13 @@ import { CSS } from '@dnd-kit/utilities'
 import type { WorkItem, WorkItemUpdate, Profile } from '@/lib/supabase'
 import { SECTION_ORDER, SECTION_CONFIG } from '@/lib/sections'
 import type { Section } from '@/lib/supabase'
+import AssigneeMultiSelect from './AssigneeMultiSelect'
+import RichTextArea, { sanitizeTaskHtml, isFormattedTitle } from './RichTextArea'
+
+function getAssigneeIds(item: WorkItem): string[] {
+  if (item.assignee_ids && item.assignee_ids.length > 0) return item.assignee_ids
+  return item.owner_id ? [item.owner_id] : []
+}
 
 function initials(profile: Profile): string {
   if (profile.short_name && profile.short_name.length <= 3) return profile.short_name
@@ -62,10 +69,10 @@ export default function DrawerItemView({
   const [ownerId, setOwnerId] = useState<string | null>(item.owner_id)
   const [saving, setSaving] = useState(false)
   const [newStepTitle, setNewStepTitle] = useState('')
-  const [newStepOwnerId, setNewStepOwnerId] = useState<string | null>(null)
+  const [newStepAssigneeIds, setNewStepAssigneeIds] = useState<string[]>([])
   const [editingStepId, setEditingStepId] = useState<string | null>(null)
 
-  const steps = (item.type === 'project' && getProjectChildren) ? getProjectChildren(item.id) : []
+  const steps = getProjectChildren ? getProjectChildren(item.id) : []
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
   useEffect(() => {
@@ -96,7 +103,7 @@ export default function DrawerItemView({
 
   return (
     <aside
-      className={`flex-shrink-0 border-l border-[var(--border)] bg-[var(--bg-panel)] backdrop-blur-sm flex flex-col overflow-hidden ${expanded ? 'w-full max-w-2xl' : 'w-80'}`}
+      className={`flex-shrink-0 border-l border-[var(--border)] bg-[var(--bg-panel)] backdrop-blur-sm flex flex-col overflow-hidden ${expanded ? 'w-[420px]' : 'w-80'}`}
     >
       <div className="p-3 border-b border-[var(--border)] flex items-center justify-between gap-2 flex-shrink-0">
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -111,15 +118,17 @@ export default function DrawerItemView({
             </svg>
           </button>
           {onExpand && !expanded && (
-            <button type="button" onClick={onExpand} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/5 flex-shrink-0" aria-label="Expand to full width" title="Expand">
+            <button type="button" onClick={onExpand} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/5 flex-shrink-0" aria-label="Widen panel" title="Widen panel">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
               </svg>
             </button>
           )}
           {onCollapse && expanded && (
-            <button type="button" onClick={onCollapse} className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] px-2 py-1 rounded-lg hover:bg-black/5" title="Back to mountain">
-              Back to mountain
+            <button type="button" onClick={onCollapse} className="p-1.5 rounded-lg text-[var(--text-muted)] hover:bg-black/5 dark:hover:bg-white/5 flex-shrink-0" aria-label="Narrow panel" title="Narrow panel">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
             </button>
           )}
         </div>
@@ -151,17 +160,18 @@ export default function DrawerItemView({
           />
         </div>
 
-        {/* Subtasks (for projects) */}
-        {item.type === 'project' && onAddSubTask && (
+        {/* Tasks (any card can have subtasks) */}
+        {onAddSubTask && (
           <div className="pt-2 border-t border-[var(--border)]">
-            <h4 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Subtasks</h4>
+            <h4 className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-2">Tasks</h4>
             <form
               onSubmit={async (e) => {
                 e.preventDefault()
                 const t = newStepTitle.trim()
                 if (!t) return
-                await onAddSubTask(t, newStepOwnerId)
+                await onAddSubTask(t, newStepAssigneeIds[0] ?? null)
                 setNewStepTitle('')
+                setNewStepAssigneeIds([])
                 setNewStepOwnerId(null)
               }}
               className="flex flex-wrap gap-2 mb-3"
@@ -170,24 +180,20 @@ export default function DrawerItemView({
                 type="text"
                 value={newStepTitle}
                 onChange={(e) => setNewStepTitle(e.target.value)}
-                placeholder="Add subtask…"
-                className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-white dark:bg-white/10 text-sm"
+                placeholder="New task title…"
+                className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg border border-teal-dark/30 bg-white dark:bg-white/10 text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-teal-light/40 focus:border-teal-dark/40"
               />
-              {profiles.length > 1 && (
-                <select
-                  value={newStepOwnerId ?? ''}
-                  onChange={(e) => setNewStepOwnerId(e.target.value || null)}
-                  className="px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-white dark:bg-white/10 text-sm min-w-0 max-w-[140px]"
-                  title="Assignee"
-                >
-                  <option value="">Unassigned</option>
-                  {profiles.map((p) => (
-                    <option key={p.id} value={p.id}>{p.short_name || p.name || p.email}</option>
-                  ))}
-                </select>
+              {profiles.length > 0 && (
+                <AssigneeMultiSelect
+                  profiles={profiles}
+                  value={newStepAssigneeIds}
+                  onChange={setNewStepAssigneeIds}
+                  placeholder="Assign"
+                  size="sm"
+                />
               )}
               <button type="submit" className="px-3 py-1.5 rounded-lg bg-teal-dark text-white text-sm font-medium hover:opacity-90">
-                Add
+                Add task
               </button>
             </form>
             {reorderProjectSteps && steps.length > 0 ? (
@@ -324,22 +330,24 @@ function DrawerStepContent({
   onEditEnd?: () => void
 }) {
   const [editTitle, setEditTitle] = useState(step.title)
-  const [editOwnerId, setEditOwnerId] = useState<string | null>(step.owner_id)
+  const [editAssigneeIds, setEditAssigneeIds] = useState<string[]>(() => getAssigneeIds(step))
   const [editDueDate, setEditDueDate] = useState(step.due_date ? step.due_date.slice(0, 10) : '')
   const dateInputRef = useRef<HTMLInputElement>(null)
-  const owner = step.owner_id ? profiles.find((p) => p.id === step.owner_id) : null
   void _completingId
 
   useEffect(() => {
     setEditTitle(step.title)
-    setEditOwnerId(step.owner_id)
+    setEditAssigneeIds(getAssigneeIds(step))
     setEditDueDate(step.due_date ? step.due_date.slice(0, 10) : '')
-  }, [step.id, step.title, step.owner_id, step.due_date])
+  }, [step.id, step.title, step.owner_id, step.due_date, step.assignee_ids])
 
   const handleSave = () => {
+    const raw = (editTitle || '').trim()
+    const title = raw ? sanitizeTaskHtml(raw) : step.title
     void onUpdate(step.id, {
-      title: editTitle.trim() || step.title,
-      owner_id: editOwnerId,
+      title: title || step.title,
+      assignee_ids: editAssigneeIds.length ? editAssigneeIds : undefined,
+      owner_id: editAssigneeIds[0] ?? null,
       due_date: editDueDate || null,
     })
     onEditEnd?.()
@@ -348,76 +356,89 @@ function DrawerStepContent({
   return (
     <>
       {isEditing ? (
-        <>
-          <input
-            type="text"
+        <div className="flex-1 min-w-0 w-full flex flex-col gap-2">
+          <RichTextArea
             value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onEditEnd?.() }}
-            className="flex-1 min-w-0 px-2 py-1 rounded border border-[var(--border)] bg-white dark:bg-white/10 text-sm"
+            onChange={setEditTitle}
             placeholder="Task title"
+            minHeight="2.5rem"
             autoFocus
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSave() }; if (e.key === 'Escape') onEditEnd?.() }}
           />
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <span className="text-xs text-[var(--text-muted)]">Due</span>
-            <input
-              type="date"
-              value={editDueDate}
-              onChange={(e) => setEditDueDate(e.target.value)}
-              className="px-2 py-1 rounded border border-[var(--border)] bg-white dark:bg-white/10 text-xs w-36 [color-scheme:light]"
-              title="Pick due date"
-            />
-          </label>
-          {profiles.length > 1 && (
-            <select
-              value={editOwnerId ?? ''}
-              onChange={(e) => setEditOwnerId(e.target.value || null)}
-              className="px-2 py-1 rounded border border-[var(--border)] bg-white dark:bg-white/10 text-xs min-w-0 max-w-[120px]"
-              title="Assignee"
-            >
-              <option value="">Unassigned</option>
-              {profiles.map((p) => (
-                <option key={p.id} value={p.id}>{p.short_name || p.name || p.email}</option>
-              ))}
-            </select>
-          )}
-          <button type="button" onClick={handleSave} className="text-xs text-teal-dark font-medium">Save</button>
-          <button type="button" onClick={onEditEnd} className="text-xs text-[var(--text-muted)]">Cancel</button>
-        </>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-1.5">
+              <span className="text-xs text-[var(--text-muted)]">Due</span>
+              <button
+                type="button"
+                onClick={() => dateInputRef.current?.click()}
+                className="flex items-center gap-1.5 px-2 py-1 rounded border border-[var(--border)] bg-white dark:bg-white/10 text-xs text-[var(--text)] hover:border-teal-dark/40 hover:bg-teal-light/10 min-w-0"
+                title="Pick due date"
+              >
+                <svg className="w-4 h-4 flex-shrink-0 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="truncate">{editDueDate ? new Date(editDueDate + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Set date'}</span>
+              </button>
+              <input
+                ref={dateInputRef}
+                type="date"
+                value={editDueDate}
+                onChange={(e) => setEditDueDate(e.target.value)}
+                className="absolute opacity-0 w-0 h-0 pointer-events-none [color-scheme:light]"
+                aria-label="Due date"
+                title="Due date"
+              />
+            </label>
+            <label className="flex items-center gap-1.5">
+              <span className="text-xs text-[var(--text-muted)]">Assignee</span>
+              <AssigneeMultiSelect
+                profiles={profiles}
+                value={editAssigneeIds}
+                onChange={setEditAssigneeIds}
+                placeholder="Assign"
+                size="sm"
+              />
+            </label>
+            <button type="button" onClick={handleSave} className="text-xs text-teal-dark font-medium">Save</button>
+            <button type="button" onClick={onEditEnd} className="text-xs text-[var(--text-muted)]">Cancel</button>
+          </div>
+        </div>
       ) : (
-        <>
+        <div className="flex flex-wrap items-center gap-2 min-h-8 w-full">
           {onEditStart ? (
-            <button type="button" onClick={onEditStart} className="flex-1 min-w-0 text-left truncate">
+            <button type="button" onClick={onEditStart} className="flex-1 min-w-0 text-left truncate min-h-8 flex items-center">
               <span className={`text-sm block truncate ${step.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'}`}>
-                {step.title}
+                {isFormattedTitle(step.title) ? (
+                  <span className="task-formatted-title line-clamp-2" dangerouslySetInnerHTML={{ __html: sanitizeTaskHtml(step.title) }} />
+                ) : (
+                  step.title
+                )}
               </span>
             </button>
           ) : (
-            <span className={`text-sm truncate flex-1 min-w-0 block ${step.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'}`}>
-              {step.title}
+            <span className={`text-sm truncate flex-1 min-w-0 min-h-8 flex items-center ${step.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'}`}>
+              {isFormattedTitle(step.title) ? (
+                <span className="task-formatted-title line-clamp-2" dangerouslySetInnerHTML={{ __html: sanitizeTaskHtml(step.title) }} />
+              ) : (
+                step.title
+              )}
             </span>
           )}
-          {profiles.length > 1 && (
-            <select
-              value={step.owner_id ?? ''}
-              onChange={(e) => { const v = e.target.value || null; void onUpdate(step.id, { owner_id: v }) }}
-              onClick={(e) => e.stopPropagation()}
-              className="px-1.5 py-0.5 rounded border border-transparent hover:border-[var(--border)] bg-transparent text-[10px] text-[var(--text-muted)] max-w-[100px] truncate"
-              title="Assignee"
-            >
-              <option value="">—</option>
-              {profiles.map((p) => (
-                <option key={p.id} value={p.id}>{p.short_name || p.name || p.email}</option>
-              ))}
-            </select>
-          )}
-          {profiles.length <= 1 && owner && (
-            <span className="text-[10px] font-medium text-[var(--text-muted)]" title={owner.name || owner.email}>{initials(owner)}</span>
+          {profiles.length > 0 && (
+            <div onClick={(e) => e.stopPropagation()} className="flex items-center min-h-8">
+              <AssigneeMultiSelect
+                profiles={profiles}
+                value={getAssigneeIds(step)}
+                onChange={(ids) => void onUpdate(step.id, { assignee_ids: ids.length ? ids : undefined, owner_id: ids[0] ?? null })}
+                placeholder="Assign"
+                size="sm"
+              />
+            </div>
           )}
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); dateInputRef.current?.click() }}
-            className="flex items-center gap-1.5 min-w-0 px-1.5 py-0.5 rounded border border-transparent hover:border-[var(--border)] text-[10px] text-[var(--text-muted)] hover:text-teal-dark flex-shrink-0"
+            className="flex items-center gap-1.5 min-h-8 min-w-0 px-1.5 py-0.5 rounded border border-transparent hover:border-[var(--border)] text-[10px] text-[var(--text-muted)] hover:text-teal-dark flex-shrink-0"
             title={step.due_date ? new Date(step.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Set due date'}
           >
             <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -434,12 +455,12 @@ function DrawerStepContent({
             aria-label="Due date"
           />
           {step.status === 'done' && (
-            <button type="button" onClick={() => onUpdate(step.id, { status: 'todo' })} className="text-xs text-teal-dark hover:underline font-medium">Undo</button>
+            <button type="button" onClick={() => onUpdate(step.id, { status: 'todo' })} className="text-xs text-teal-dark hover:underline font-medium min-h-8 flex items-center flex-shrink-0">Undo</button>
           )}
           {step.status !== 'done' && (
-            <button type="button" onClick={() => onMarkDone?.(step.id)} className="text-xs text-teal-dark hover:underline font-medium">Done</button>
+            <button type="button" onClick={() => onMarkDone?.(step.id)} className="text-xs text-teal-dark hover:underline font-medium min-h-8 flex items-center flex-shrink-0">Done</button>
           )}
-        </>
+        </div>
       )}
     </>
   )

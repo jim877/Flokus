@@ -27,6 +27,8 @@ export interface Flow {
   colorTheme?: FlowColorTheme
   /** Optional background id (e.g. 'zen' | 'warm' | 'cool') when this flow is active */
   backgroundId?: string
+  /** Optional overlay 0–100 when using image/zen background; higher = more faded for readability */
+  backgroundOverlay?: number
 }
 
 export const FLOWS_STORAGE_KEY = 'flokus-flows'
@@ -59,5 +61,9 @@ export function normalizeFlow(raw: { id: string; name: string; [k: string]: unkn
     icon: isValidIconId(raw.icon) ? raw.icon : undefined,
     colorTheme: isValidColorTheme(raw.colorTheme) ? raw.colorTheme : undefined,
     backgroundId: typeof raw.backgroundId === 'string' ? raw.backgroundId : undefined,
+    backgroundOverlay:
+      typeof raw.backgroundOverlay === 'number' && raw.backgroundOverlay >= 0 && raw.backgroundOverlay <= 100
+        ? raw.backgroundOverlay
+        : undefined,
   }
 }
