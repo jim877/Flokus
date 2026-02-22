@@ -28,6 +28,7 @@ interface WorkspaceListProps {
   onMoveToSection: (itemId: string, section: Section) => Promise<void>
   onMarkDone?: (itemId: string) => void
   completingId?: string | null
+  getProjectChildren?: (parentId: string) => WorkItem[]
 }
 
 function SectionDropZone({
@@ -50,6 +51,18 @@ function SectionDropZone({
   )
 }
 
+function getAssigneeProfiles(item: WorkItem, profiles: Profile[], getProjectChildren?: (parentId: string) => WorkItem[]): { profiles: Profile[]; ownerId: string | null } {
+  const ownerId = item.owner_id
+  const ids = new Set<string>()
+  if (ownerId) ids.add(ownerId)
+  if (item.type === 'project' && getProjectChildren) {
+    getProjectChildren(item.id).forEach((s) => { if (s.owner_id) ids.add(s.owner_id) })
+  }
+  const list = profiles.filter((p) => ids.has(p.id))
+  const ordered = ownerId ? [...list].sort((a, b) => (a.id === ownerId ? -1 : b.id === ownerId ? 1 : 0)) : list
+  return { profiles: ordered, ownerId: ownerId || null }
+}
+
 export default function WorkspaceList({
   sections,
   profiles,
@@ -60,6 +73,7 @@ export default function WorkspaceList({
   onMoveToSection,
   onMarkDone,
   completingId,
+  getProjectChildren,
 }: WorkspaceListProps) {
   const [futureOpen, setFutureOpen] = useState(false)
   const highlightedRef = useRef<HTMLDivElement>(null)
@@ -168,6 +182,8 @@ export default function WorkspaceList({
                                 onSelect={() => onSelect(selectedId === item.id ? null : item.id)}
                                 onMarkDone={onMarkDone}
                                 isCompleting={completingId === item.id}
+                                assigneeProfiles={getAssigneeProfiles(item, profiles, getProjectChildren).profiles}
+                                ownerId={getAssigneeProfiles(item, profiles, getProjectChildren).ownerId}
                               />
                               </div>
                             ))
@@ -210,6 +226,8 @@ export default function WorkspaceList({
                                 onSelect={() => onSelect(selectedId === item.id ? null : item.id)}
                                 onMarkDone={onMarkDone}
                                 isCompleting={completingId === item.id}
+                                assigneeProfiles={getAssigneeProfiles(item, profiles, getProjectChildren).profiles}
+                                ownerId={getAssigneeProfiles(item, profiles, getProjectChildren).ownerId}
                               />
                               </div>
                             ))

@@ -188,6 +188,52 @@ export function useAllWorkItems() {
     }
   }
 
+  const reorderProjectSteps = async (_projectId: string, orderedSteps: WorkItem[]): Promise<void> => {
+    const updates = orderedSteps.map((step, i) => ({ ...step, position: i }))
+    if (USE_MOCK) {
+      setItems((prev) =>
+        prev.map((i) => {
+          const u = updates.find((u) => u.id === i.id)
+          return u ? { ...i, position: u.position } : i
+        })
+      )
+      return
+    }
+    for (let i = 0; i < orderedSteps.length; i++) {
+      await supabase.from('work_items').update({ position: i, updated_at: new Date().toISOString() }).eq('id', orderedSteps[i].id)
+    }
+    setItems((prev) =>
+      prev.map((i) => {
+        const u = updates.find((u) => u.id === i.id)
+        return u ? { ...i, position: u.position } : i
+      })
+    )
+  }
+
+  const removeStepFromProject = async (stepId: string, projectSection: Section): Promise<void> => {
+    const targetList = sections[projectSection]
+    const newPosition = targetList.length
+    await updateItem(stepId, { parent_id: null, section: projectSection, position: newPosition })
+    setItems((prev) => {
+      const item = prev.find((i) => i.id === stepId)
+      if (!item) return prev
+      const updated = { ...item, parent_id: null, section: projectSection, position: newPosition }
+      return prev.map((i) => (i.id === stepId ? updated : i)).sort((a, b) => a.section.localeCompare(b.section) || a.position - b.position)
+    })
+  }
+
+  const linkTaskToProject = async (taskId: string, projectId: string, projectSection: Section): Promise<void> => {
+    const steps = items.filter((i) => i.parent_id === projectId)
+    const newPosition = steps.length
+    await updateItem(taskId, { parent_id: projectId, section: projectSection, position: newPosition })
+    setItems((prev) => {
+      const item = prev.find((i) => i.id === taskId)
+      if (!item) return prev
+      const updated = { ...item, parent_id: projectId, section: projectSection, position: newPosition }
+      return prev.map((i) => (i.id === taskId ? updated : i))
+    })
+  }
+
   return {
     items,
     sections,
@@ -198,6 +244,9 @@ export function useAllWorkItems() {
     deleteItem,
     reorderSection,
     moveToSection,
+    reorderProjectSteps,
+    removeStepFromProject,
+    linkTaskToProject,
     getProjectChildren,
     setItems,
   }

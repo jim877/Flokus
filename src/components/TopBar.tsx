@@ -6,24 +6,54 @@ interface TopBarProps {
   onSignOut: () => void
   logoSpinning?: boolean
   onOpenSettings?: () => void
+  /** Current flow/organization name – everything in the app is scoped to this flow */
+  flowName?: string | null
+  /** Optional search – when provided, a subtle search bar is shown in the center of the header */
+  searchQuery?: string
+  onSearchChange?: (value: string) => void
 }
 
-export default function TopBar({ userEmail, onSignOut, logoSpinning, onOpenSettings }: TopBarProps) {
+export default function TopBar({ userEmail, onSignOut, logoSpinning, onOpenSettings, flowName, searchQuery = '', onSearchChange }: TopBarProps) {
   return (
     <header className="h-12 flex-shrink-0 flex items-center gap-4 px-4 bg-white/30 dark:bg-white/5 border-b border-[var(--border)] backdrop-blur-sm">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <span className={logoSpinning ? 'inline-block animate-logo-spin' : 'inline-block'}>
           <FlokusLogo className="w-8 h-8 flex-shrink-0" />
         </span>
-        <span className="font-semibold text-sm text-[var(--text)]">Flökus</span>
+        <span className="font-semibold text-sm text-[var(--text)] lowercase">fókusz</span>
+        {flowName && (
+          <span className="text-sm text-[var(--text-muted)] truncate max-w-[180px]" title={flowName}>
+            · {flowName}
+          </span>
+        )}
         {USE_MOCK && (
           <span className="text-[10px] text-[var(--text-muted)] px-1.5 py-0.5 rounded bg-black/5">
             Local
           </span>
         )}
       </div>
-      <div className="flex-1" />
-      <div className="flex items-center gap-2">
+      {onSearchChange && (
+        <div className="flex-1 flex justify-center max-w-md mx-2 min-w-0">
+          <label className="relative w-full max-w-xs">
+            <span className="sr-only">Search</span>
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-muted)]">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Search…"
+              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-white/50 dark:bg-white/5 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-teal-light/30 focus:border-sage/40"
+              aria-label="Search"
+            />
+          </label>
+        </div>
+      )}
+      {!onSearchChange && <div className="flex-1" />}
+      <div className="flex items-center gap-2 flex-shrink-0">
         {onOpenSettings && (
           <button
             type="button"

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { Profile } from '@/lib/supabase'
-
-const AVATAR_PRESETS = ['👤', '🧑', '👩', '👨', '🧑‍💻', '👩‍💻', '🌿', '📋', '✓', '◆']
+import { TeamAvatar, AVATAR_COLORS, COLOR_PREFIX } from './TeamAvatar'
 
 export interface BackgroundOption {
   id: string
@@ -10,10 +9,21 @@ export interface BackgroundOption {
 }
 
 const BACKGROUND_OPTIONS: BackgroundOption[] = [
+  /* Your uploaded photos (public folder) */
+  { id: 'local-valley', label: 'Green valley', className: 'zen-bg-local-valley' },
+  { id: 'local-misty-peaks', label: 'Misty peaks', className: 'zen-bg-local-misty-peaks' },
+  { id: 'local-stones', label: 'River stones', className: 'zen-bg-local-stones' },
+  { id: 'local-alpine-lake', label: 'Alpine lake', className: 'zen-bg-local-alpine-lake' },
+  { id: 'local-sunrise', label: 'Sunrise mountains', className: 'zen-bg-local-sunrise' },
+  { id: 'local-misty-hills', label: 'Misty hills', className: 'zen-bg-local-misty-hills' },
+  { id: 'local-vista', label: 'Mountain vista', className: 'zen-bg-local-vista' },
+  /* Built-in options */
   { id: 'zen', label: 'Zen pebbles', className: 'zen-bg' },
   { id: 'warm', label: 'Warm gradient', className: 'zen-bg-warm' },
   { id: 'cool', label: 'Cool mist', className: 'zen-bg-cool' },
 ]
+
+export type MeetingCadence = 'weekly' | 'biweekly'
 
 interface SettingsModalProps {
   open: boolean
@@ -23,6 +33,11 @@ interface SettingsModalProps {
   onUpdateProfile: (id: string, updates: Partial<Pick<Profile, 'name' | 'avatar_url' | 'initials' | 'short_name'>>) => void
   backgroundId: string
   onBackgroundChange: (id: string) => void
+  /** 0 = photo fully visible, 100 = maximum overlay (most faded) */
+  backgroundOverlay?: number
+  onBackgroundOverlayChange?: (percent: number) => void
+  meetingCadence?: MeetingCadence
+  onMeetingCadenceChange?: (cadence: MeetingCadence) => void
 }
 
 export default function SettingsModal({
@@ -33,16 +48,17 @@ export default function SettingsModal({
   onUpdateProfile,
   backgroundId,
   onBackgroundChange,
+  backgroundOverlay = 75,
+  onBackgroundOverlayChange,
+  meetingCadence = 'weekly',
+  onMeetingCadenceChange,
 }: SettingsModalProps) {
-  const [activeSection, setActiveSection] = useState<'team' | 'background'>('team')
+  const [activeSection, setActiveSection] = useState<'team' | 'background' | 'meeting'>('team')
   const [showAddMember, setShowAddMember] = useState(false)
   const [addName, setAddName] = useState('')
   const [addEmail, setAddEmail] = useState('')
   const [editingShortName, setEditingShortName] = useState<string | null>(null)
   const [shortNameDraft, setShortNameDraft] = useState('')
-
-  const usedShortNames = new Set(profiles.map((p) => (p.short_name || '').trim()).filter(Boolean))
-  const avatarEmojiPrefix = 'emoji:'
 
   const handleAddMember = (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,94 +115,171 @@ export default function SettingsModal({
             >
               Background
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveSection('meeting')}
+              className={`px-4 py-2.5 text-sm font-medium ${activeSection === 'meeting' ? 'text-teal-dark border-b-2 border-teal-dark' : 'text-[var(--text-muted)]'}`}
+            >
+              Meeting
+            </button>
           </div>
           <div className="flex-1 overflow-auto p-4">
             {activeSection === 'team' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-[var(--text-muted)]">Members</span>
-                  <button type="button" onClick={() => setShowAddMember(!showAddMember)} className="text-sm text-teal-dark hover:underline">
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-[var(--text-muted)]">Add and manage team members. Assign avatars and short names for the 90-day view.</p>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddMember(!showAddMember)}
+                    className="px-3 py-2 rounded-xl text-sm font-medium bg-teal-dark text-white hover:bg-teal-dark/90 transition-colors"
+                  >
                     {showAddMember ? 'Cancel' : '+ Add member'}
                   </button>
                 </div>
                 {showAddMember && (
-                  <form onSubmit={handleAddMember} className="space-y-2 p-3 rounded-xl bg-black/5 dark:bg-white/5">
-                    <input type="text" value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="Name" className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-transparent text-sm" />
-                    <input type="email" value={addEmail} onChange={(e) => setAddEmail(e.target.value)} placeholder="Email" required className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-transparent text-sm" />
-                    <button type="submit" className="w-full py-2 rounded-lg text-sm font-medium bg-teal-light/20 text-teal-dark">Add</button>
+                  <form onSubmit={handleAddMember} className="p-4 rounded-2xl border-2 border-[var(--border)] bg-white/60 dark:bg-white/5 space-y-3">
+                    <label className="block">
+                      <span className="text-xs font-medium text-[var(--text-muted)]">Name</span>
+                      <input
+                        type="text"
+                        value={addName}
+                        onChange={(e) => setAddName(e.target.value)}
+                        placeholder="Full name"
+                        className="mt-1 w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-white dark:bg-white/10 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)]"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-xs font-medium text-[var(--text-muted)]">Email</span>
+                      <input
+                        type="email"
+                        value={addEmail}
+                        onChange={(e) => setAddEmail(e.target.value)}
+                        placeholder="email@example.com"
+                        required
+                        className="mt-1 w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-white dark:bg-white/10 text-sm text-[var(--text)] placeholder:text-[var(--text-muted)]"
+                      />
+                    </label>
+                    <button type="submit" className="w-full py-2.5 rounded-xl text-sm font-medium bg-teal-dark text-white hover:bg-teal-dark/90">
+                      Add to team
+                    </button>
                   </form>
                 )}
-                <ul className="space-y-2">
-                  {profiles.map((p) => {
-                    const isEditing = editingShortName === p.id
-                    const shortNameValue = (p.short_name || '').trim()
-                    const otherShortNames = new Set(profiles.filter((x) => x.id !== p.id).map((x) => (x.short_name || '').trim()).filter(Boolean))
-                    const duplicate = Boolean(shortNameDraft.trim() && otherShortNames.has(shortNameDraft.trim()))
-                    return (
-                      <li key={p.id} className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border)] bg-white/50 dark:bg-white/5">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-teal-light/20 text-teal-dark flex items-center justify-center text-lg overflow-hidden">
-                          {p.avatar_url?.startsWith(avatarEmojiPrefix) ? (
-                            <span>{p.avatar_url.slice(avatarEmojiPrefix.length)}</span>
-                          ) : p.avatar_url ? (
-                            <img src={p.avatar_url} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <span>{p.initials || (p.name || p.email).slice(0, 2).toUpperCase()}</span>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-[var(--text)] truncate">{p.name || p.email}</div>
-                          <div className="text-xs text-[var(--text-muted)] truncate">{p.email}</div>
-                          {isEditing ? (
-                            <div className="flex items-center gap-2 mt-1">
-                              <input
-                                type="text"
-                                value={shortNameDraft}
-                                onChange={(e) => setShortNameDraft(e.target.value)}
-                                placeholder="Short name (unique)"
-                                className="mt-1 px-2 py-1 rounded border border-[var(--border)] bg-transparent text-xs w-24"
-                                onKeyDown={(e) => { if (e.key === 'Enter') handleSaveShortName(p.id); if (e.key === 'Escape') { setEditingShortName(null); setShortNameDraft('') } }}
-                              />
-                              {duplicate && <span className="text-[10px] text-red-600">Duplicate</span>}
-                              <button type="button" onClick={() => handleSaveShortName(p.id)} disabled={duplicate} className="text-xs text-teal-dark disabled:opacity-50">Save</button>
-                              <button type="button" onClick={() => { setEditingShortName(null); setShortNameDraft('') }} className="text-xs text-[var(--text-muted)]">Cancel</button>
+                <div className="space-y-3">
+                  <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Team members</h3>
+                  {profiles.length === 0 ? (
+                    <p className="text-sm text-[var(--text-muted)] py-4 text-center rounded-xl border border-dashed border-[var(--border)]">
+                      No members yet. Add someone above.
+                    </p>
+                  ) : (
+                    <ul className="space-y-3">
+                      {profiles.map((p) => {
+                        const isEditing = editingShortName === p.id
+                        const shortNameValue = (p.short_name || '').trim()
+                        const otherShortNames = new Set(profiles.filter((x) => x.id !== p.id).map((x) => (x.short_name || '').trim()).filter(Boolean))
+                        const duplicate = Boolean(shortNameDraft.trim() && otherShortNames.has(shortNameDraft.trim()))
+                        return (
+                          <li key={p.id} className="p-4 rounded-2xl border border-[var(--border)] bg-white/70 dark:bg-white/5 hover:border-teal-dark/20 transition-colors">
+                            <div className="flex items-start gap-4">
+                              <TeamAvatar profile={p} size="lg" />
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-[var(--text)]">{p.short_name?.trim() || p.name || p.email}</div>
+                                <div className="text-xs text-[var(--text-muted)] truncate">{p.short_name?.trim() ? `${p.name || p.email} · ${p.email}` : p.email}</div>
+                                {isEditing ? (
+                                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                                    <input
+                                      type="text"
+                                      value={shortNameDraft}
+                                      onChange={(e) => setShortNameDraft(e.target.value)}
+                                      placeholder="Short name (unique)"
+                                      className="px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-white dark:bg-white/10 text-sm w-28"
+                                      onKeyDown={(e) => { if (e.key === 'Enter') handleSaveShortName(p.id); if (e.key === 'Escape') { setEditingShortName(null); setShortNameDraft('') } }}
+                                    />
+                                    {duplicate && <span className="text-xs text-red-600">Already used</span>}
+                                    <button type="button" onClick={() => handleSaveShortName(p.id)} disabled={duplicate} className="text-sm text-teal-dark font-medium disabled:opacity-50">Save</button>
+                                    <button type="button" onClick={() => { setEditingShortName(null); setShortNameDraft('') }} className="text-sm text-[var(--text-muted)]">Cancel</button>
+                                  </div>
+                                ) : (
+                                  <button type="button" onClick={() => startEditShortName(p)} className="text-sm text-teal-dark hover:underline mt-0.5">
+                                    {shortNameValue ? `Short name: ${shortNameValue}` : 'Set short name'}
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                          ) : (
-                            <button type="button" onClick={() => startEditShortName(p)} className="text-xs text-teal-dark hover:underline mt-0.5">
-                              {shortNameValue || 'Set short name'}
-                            </button>
-                          )}
-                        </div>
-                        <div className="flex gap-1 flex-shrink-0 flex-wrap">
-                          {AVATAR_PRESETS.map((emoji) => (
-                            <button
-                              key={emoji}
-                              type="button"
-                              onClick={() => onUpdateProfile(p.id, { avatar_url: avatarEmojiPrefix + emoji })}
-                              className="w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center text-sm hover:border-teal-dark/40"
-                            >
-                              {emoji}
-                            </button>
-                          ))}
-                        </div>
-                      </li>
-                    )
-                  })}
-                </ul>
-                <p className="text-xs text-[var(--text-muted)]">Short names cannot be duplicated. Use them for quick display in the mountain.</p>
+                            <div className="mt-3 pt-3 border-t border-[var(--border)]/60">
+                              <span className="text-xs font-medium text-[var(--text-muted)] block mb-2">Avatar color</span>
+                              <div className="flex flex-wrap gap-2">
+                                {AVATAR_COLORS.map((c) => {
+                                  const isSelected = (p.avatar_url?.startsWith(COLOR_PREFIX) && p.avatar_url.slice(COLOR_PREFIX.length) === c.id) || (!p.avatar_url && c.id === 'teal')
+                                  return (
+                                    <button
+                                      key={c.id}
+                                      type="button"
+                                      onClick={() => onUpdateProfile(p.id, { avatar_url: COLOR_PREFIX + c.id })}
+                                      className={`w-8 h-8 rounded-full ${c.bg} ${c.text} text-xs font-bold border-2 transition-all ${isSelected ? 'border-[var(--text)] ring-2 ring-teal-dark/30' : 'border-transparent hover:scale-110'}`}
+                                      title={c.id}
+                                    >
+                                      {p.initials || (p.name || p.email).slice(0, 1).toUpperCase()}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </div>
+                <p className="text-xs text-[var(--text-muted)]">Short names are unique and show in the 90-day mountain. Avatar colors help tell people apart at a glance.</p>
               </div>
             )}
             {activeSection === 'background' && (
-              <div className="space-y-2">
-                {BACKGROUND_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => onBackgroundChange(opt.id)}
-                    className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-colors ${backgroundId === opt.id ? 'border-teal-dark bg-teal-light/10' : 'border-[var(--border)] hover:border-teal-dark/30'}`}
-                  >
-                    <span className="font-medium text-[var(--text)]">{opt.label}</span>
-                  </button>
-                ))}
+              <div className="space-y-4">
+                {onBackgroundOverlayChange != null && (
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-[var(--text)]">
+                      Overlay: {backgroundOverlay}%
+                    </label>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={backgroundOverlay}
+                      onChange={(e) => onBackgroundOverlayChange(Number(e.target.value))}
+                      className="w-full h-2 rounded-lg appearance-none bg-[var(--border)] accent-teal-dark"
+                    />
+                    <p className="text-xs text-[var(--text-muted)]">Lower = more photo visible, higher = more faded for readability.</p>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  {BACKGROUND_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => onBackgroundChange(opt.id)}
+                      className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-colors ${backgroundId === opt.id ? 'border-teal-dark bg-teal-light/10' : 'border-[var(--border)] hover:border-teal-dark/30'}`}
+                    >
+                      <span className="font-medium text-[var(--text)]">{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {activeSection === 'meeting' && (
+              <div className="space-y-3">
+                <p className="text-sm text-[var(--text-muted)]">Weekly review cadence. Use the Meeting button in the sidebar to run a review for the selected flow.</p>
+                <div className="space-y-2">
+                  {(['weekly', 'biweekly'] as const).map((cadence) => (
+                    <button
+                      key={cadence}
+                      type="button"
+                      onClick={() => onMeetingCadenceChange?.(cadence)}
+                      className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-colors ${meetingCadence === cadence ? 'border-teal-dark bg-teal-light/10' : 'border-[var(--border)] hover:border-teal-dark/30'}`}
+                    >
+                      <span className="font-medium text-[var(--text)]">{cadence === 'weekly' ? 'Weekly' : 'Every 2 weeks'}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>

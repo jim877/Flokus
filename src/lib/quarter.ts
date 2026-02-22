@@ -8,6 +8,38 @@ function getQuarterEnd(date: Date): Date {
   return new Date(y, 11, 31)             // Dec 31
 }
 
+function getQuarterStart(date: Date): Date {
+  const y = date.getFullYear()
+  const m = date.getMonth()
+  if (m < 3) return new Date(y, 0, 1)    // Jan 1
+  if (m < 6) return new Date(y, 3, 1)    // Apr 1
+  if (m < 9) return new Date(y, 6, 1)    // Jul 1
+  return new Date(y, 9, 1)               // Oct 1
+}
+
+/** Current quarter start/end as ISO date strings (YYYY-MM-DD) for storage */
+export function getCurrentQuarterStartISO(): string {
+  return getQuarterStart(new Date()).toISOString().slice(0, 10)
+}
+
+export function getCurrentQuarterEndISO(): string {
+  return getQuarterEnd(new Date()).toISOString().slice(0, 10)
+}
+
+/** 90 days from today as ISO date (for async flows) */
+export function getAsyncFlowEndISO(): string {
+  const d = new Date()
+  d.setDate(d.getDate() + 90)
+  return d.toISOString().slice(0, 10)
+}
+
+export function formatQuarterRange(startISO: string, endISO: string): string {
+  const start = new Date(startISO)
+  const end = new Date(endISO)
+  const q = end.getMonth() === 2 ? 'Q1' : end.getMonth() === 5 ? 'Q2' : end.getMonth() === 8 ? 'Q3' : 'Q4'
+  return `${q} ${end.getFullYear()} (${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`
+}
+
 export function getDaysUntilNextQuarter(): number {
   const now = new Date()
   now.setHours(0, 0, 0, 0)

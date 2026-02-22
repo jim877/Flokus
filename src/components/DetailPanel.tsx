@@ -129,7 +129,7 @@ export default function DetailPanel({ item, profiles, onClose, onUpdate, onDelet
               setSection(v)
               void handleSave({ section: v })
             }}
-            className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-transparent text-sm text-[var(--text)]"
+            className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-white dark:bg-white/10 text-sm text-[var(--text)]"
           >
             {SECTION_ORDER.map((id) => (
               <option key={id} value={id}>
@@ -145,7 +145,7 @@ export default function DetailPanel({ item, profiles, onClose, onUpdate, onDelet
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={() => void handleSave()}
-            className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-transparent text-sm text-[var(--text)]"
+            className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-white dark:bg-white/10 text-sm text-[var(--text)]"
           />
         </div>
         <div>
@@ -155,7 +155,7 @@ export default function DetailPanel({ item, profiles, onClose, onUpdate, onDelet
             onChange={(e) => setDescription(e.target.value)}
             onBlur={() => void handleSave()}
             rows={2}
-            className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-transparent text-sm text-[var(--text)]"
+            className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-white dark:bg-white/10 text-sm text-[var(--text)]"
           />
         </div>
         <div>
@@ -165,7 +165,7 @@ export default function DetailPanel({ item, profiles, onClose, onUpdate, onDelet
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
             onBlur={() => void handleSave()}
-            className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-transparent text-sm text-[var(--text)]"
+            className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-white dark:bg-white/10 text-sm text-[var(--text)]"
           />
         </div>
         <div>
@@ -177,7 +177,7 @@ export default function DetailPanel({ item, profiles, onClose, onUpdate, onDelet
               setOwnerId(v)
               void handleSave({ owner_id: v })
             }}
-            className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-transparent text-sm text-[var(--text)]"
+            className="w-full px-2.5 py-1.5 rounded-lg border border-[var(--border)] bg-white dark:bg-white/10 text-sm text-[var(--text)]"
           >
             <option value="">Unassigned</option>
             {profiles.map((p) => (

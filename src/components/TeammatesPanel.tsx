@@ -1,9 +1,6 @@
 import { useState } from 'react'
 import type { Profile } from '@/lib/supabase'
-
-function getInitials(p: Profile): string {
-  return p.initials || (p.name ? p.name.slice(0, 2).toUpperCase() : p.email.slice(0, 2).toUpperCase())
-}
+import { TeamAvatar } from './TeamAvatar'
 
 interface TeammatesPanelProps {
   profiles: Profile[]
@@ -73,13 +70,8 @@ export default function TeammatesPanel({ profiles, onAddTeammate, collapsed }: T
       <ul className="space-y-1">
         {profiles.map((p) => (
           <li key={p.id} className="flex items-center gap-2 py-1">
-            <span
-              className="w-7 h-7 rounded-full bg-teal-light/20 text-teal-dark text-[10px] font-medium flex items-center justify-center flex-shrink-0"
-              title={p.email}
-            >
-              {getInitials(p)}
-            </span>
-            <span className="text-sm text-[var(--text)] truncate">{p.name || p.email}</span>
+            <TeamAvatar profile={p} size="sm" className="flex-shrink-0" />
+            <span className="text-sm text-[var(--text)] truncate">{p.short_name || p.name || p.email}</span>
           </li>
         ))}
       </ul>

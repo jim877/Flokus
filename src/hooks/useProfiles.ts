@@ -30,7 +30,14 @@ export function useProfiles() {
   }, [])
 
   const addProfile = (name: string, email: string) => {
-    const initials = name.trim() ? name.trim().slice(0, 2).toUpperCase() : email.slice(0, 2).toUpperCase()
+    const trimmed = name.trim()
+    let initials: string
+    if (trimmed) {
+      const parts = trimmed.split(/\s+/).filter(Boolean)
+      initials = parts.length >= 2 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : trimmed.slice(0, 2).toUpperCase()
+    } else {
+      initials = email.slice(0, 2).toUpperCase()
+    }
     const newProfile: Profile = {
       id: uuid(),
       name: name.trim() || null,

@@ -1,4 +1,4 @@
-# TaskFlow for Teams
+# Fókusz
 
 A simple workspace for your team's tasks and projects: capture in one list, prioritize, and collaborate.
 
@@ -9,6 +9,27 @@ A simple workspace for your team's tasks and projects: capture in one list, prio
 - **Quick Add**: Top bar input — type and Enter to add to Primary List
 - **Detail panel**: Edit title, description, priority, due date, assignee, private; mark complete, delete
 - **Reorder**: Drag to reorder within the list
+
+## Pushing to GitHub
+
+1. **Create a repo on GitHub**  
+   - Go to [github.com](https://github.com) and sign in.  
+   - Click the **+** (top right) → **New repository**.  
+   - Name it `fokusz` (or any name you like).  
+   - Leave “Add a README” **unchecked** (you already have one).  
+   - Click **Create repository**.
+
+2. **Connect and push from your machine**  
+   On the new repo page, GitHub shows “…or push an existing repository from the command line.” Run those two commands in your project folder (replace `YOUR_USERNAME` with your GitHub username):
+
+   ```bash
+   git remote add origin https://github.com/YOUR_USERNAME/fokusz.git
+   git push -u origin main
+   ```
+
+   When prompted, sign in with your GitHub account (or use a [Personal Access Token](https://github.com/settings/tokens) if you use 2FA).
+
+That’s it. Your Fókusz code will be on GitHub.
 
 ## Setup
 

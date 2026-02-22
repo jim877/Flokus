@@ -2,6 +2,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { WorkItem } from '@/lib/supabase'
 import type { Profile } from '@/lib/supabase'
+import AvatarStack from './AvatarStack'
 
 function formatDue(dateStr: string | null): string {
   if (!dateStr) return ''
@@ -17,11 +18,14 @@ function formatDue(dateStr: string | null): string {
   return d.toLocaleDateString()
 }
 
-function getInitials(profile: Profile | null): string {
-  if (profile?.initials) return profile.initials
-  if (profile?.name) return profile.name.slice(0, 2).toUpperCase()
-  if (profile?.email) return profile.email.slice(0, 2).toUpperCase()
-  return '?'
+function formatDoneDate(updatedAt: string | undefined): string {
+  if (!updatedAt) return ''
+  const d = new Date(updatedAt)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const sameDay = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()
+  if (sameDay) return `Done today at ${d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
+  return `Done ${d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}`
 }
 
 interface ItemCardProps {
@@ -32,9 +36,14 @@ interface ItemCardProps {
   onSelect: () => void
   onMarkDone?: (itemId: string) => void
   isCompleting?: boolean
+  /** For avatar stack: assignees (owner + step assignees), owner first */
+  assigneeProfiles?: Profile[]
+  ownerId?: string | null
+  /** When true, show gradient outline "deposited" animation */
+  isJustDeposited?: boolean
 }
 
-export default function ItemCard({ item, profiles, isSelected, isHighlighted, onSelect, onMarkDone, isCompleting }: ItemCardProps) {
+export default function ItemCard({ item, profiles, isSelected, isHighlighted, onSelect, onMarkDone, isCompleting, assigneeProfiles, ownerId, isJustDeposited }: ItemCardProps) {
   const {
     attributes,
     listeners,
@@ -49,7 +58,8 @@ export default function ItemCard({ item, profiles, isSelected, isHighlighted, on
     transition,
   }
 
-  const owner = item.owner_id ? profiles.find((p) => p.id === item.owner_id) : null
+  const displayProfiles = assigneeProfiles && assigneeProfiles.length > 0 ? assigneeProfiles : (item.owner_id ? profiles.filter((p) => p.id === item.owner_id) : [])
+  const displayOwnerId = ownerId ?? item.owner_id
 
   return (
     <div
@@ -59,7 +69,7 @@ export default function ItemCard({ item, profiles, isSelected, isHighlighted, on
         flex items-center gap-3 px-3 py-2.5 rounded-xl border bg-[var(--bg-panel)] backdrop-blur-sm
         cursor-pointer transition-all duration-200
         ${isSelected ? 'ring-1 ring-teal-dark/30 border-teal-light/40' : 'border-[var(--border)]'}
-        ${isHighlighted ? 'animate-glow-teal ring-1 ring-teal-dark/30' : ''}
+        ${isJustDeposited ? 'deposit-highlight' : isHighlighted ? 'animate-glow-teal ring-1 ring-teal-dark/30' : ''}
         hover:border-teal-light/30
         ${isDragging ? 'opacity-70 shadow-card-soft z-10' : ''}
         ${isCompleting ? 'animate-dissolve pointer-events-none' : ''}
@@ -81,13 +91,15 @@ export default function ItemCard({ item, profiles, isSelected, isHighlighted, on
           <circle cx="13" cy="10" r="1.5" />
         </svg>
       </button>
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
         {item.type === 'project' ? (
           <span className="text-[var(--text-muted)]" aria-hidden="true">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
           </span>
+        ) : displayProfiles.length > 0 ? (
+          <AvatarStack profiles={displayProfiles} ownerId={displayOwnerId} maxVisible={2} onMarkDone={() => item.status !== 'done' && onMarkDone?.(item.id)} isDone={item.status === 'done'} />
         ) : (
           <button
             type="button"
@@ -114,20 +126,20 @@ export default function ItemCard({ item, profiles, isSelected, isHighlighted, on
         <span className={`text-sm truncate block ${item.status === 'done' ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text)]'}`}>
           {item.title}
         </span>
-        {item.due_date && (
+        {item.status === 'done' && item.updated_at && (
+          <span className="text-[10px] text-[var(--text-muted)] block mt-0.5" title={new Date(item.updated_at).toLocaleString()}>
+            {formatDoneDate(item.updated_at)}
+          </span>
+        )}
+        {item.status !== 'done' && item.due_date && (
           <span className="text-xs text-[var(--text-muted)]">
             {formatDue(item.due_date)}
           </span>
         )}
       </div>
       <div className="flex items-center gap-1.5 flex-shrink-0">
-        {owner && (
-          <span
-            className="w-6 h-6 rounded-full bg-teal-light/20 text-teal-dark text-[10px] font-medium flex items-center justify-center"
-            title={owner.email}
-          >
-            {getInitials(owner)}
-          </span>
+        {item.type === 'project' && displayProfiles.length > 0 && (
+          <AvatarStack profiles={displayProfiles} ownerId={displayOwnerId} className="flex-shrink-0" />
         )}
         {item.is_private && (
           <span className="text-[var(--text-muted)]" title="Private">

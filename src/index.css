@@ -27,17 +27,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Beige gradient (visible) + zen pebbles showing through semi-transparent gradient */
+/* Beige gradient + zen pebbles. Overlay alpha controlled by --bg-overlay-alpha (0–1). */
 .zen-bg {
   position: relative;
   background-color: #F2F0EA;
   background-image:
     linear-gradient(
       165deg,
-      rgba(253, 252, 250, 0.78) 0%,
-      rgba(248, 246, 242, 0.76) 30%,
-      rgba(243, 241, 235, 0.74) 60%,
-      rgba(238, 235, 228, 0.76) 100%
+      rgba(253, 252, 250, var(--bg-overlay-alpha, 0.78)) 0%,
+      rgba(248, 246, 242, var(--bg-overlay-alpha, 0.76)) 30%,
+      rgba(243, 241, 235, var(--bg-overlay-alpha, 0.74)) 60%,
+      rgba(238, 235, 228, var(--bg-overlay-alpha, 0.76)) 100%
     ),
     url('https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=1600&q=40');
   background-size: 100% 100%, cover;
@@ -77,10 +77,246 @@ body {
   background-size: 100% 100%;
 }
 
+/* Your uploaded photos. Overlay: var(--bg-overlay-alpha, 0.78). */
+.zen-bg-local-valley {
+  position: relative;
+  background-color: #EDEBE6;
+  background-image:
+    linear-gradient(165deg, rgba(252,251,248,var(--bg-overlay-alpha,0.78)) 0%, rgba(247,246,240,var(--bg-overlay-alpha,0.76)) 50%, rgba(242,239,232,var(--bg-overlay-alpha,0.76)) 100%),
+    url('/grant-ritchie-x1w_Q78xNEY-unsplash.jpg');
+  background-size: 100% 100%, cover;
+  background-position: 0 0, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.zen-bg-local-misty-peaks {
+  position: relative;
+  background-color: #E6E8EB;
+  background-image:
+    linear-gradient(165deg, rgba(248,250,252,var(--bg-overlay-alpha,0.8)) 0%, rgba(240,244,248,var(--bg-overlay-alpha,0.76)) 50%, rgba(232,238,242,var(--bg-overlay-alpha,0.76)) 100%),
+    url('/guillaume-briard-lSXpV8bDeMA-unsplash.jpg');
+  background-size: 100% 100%, cover;
+  background-position: 0 0, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.zen-bg-local-stones {
+  position: relative;
+  background-color: #EBE9E6;
+  background-image:
+    linear-gradient(165deg, rgba(252,251,248,var(--bg-overlay-alpha,0.82)) 0%, rgba(247,246,242,var(--bg-overlay-alpha,0.78)) 50%, rgba(242,240,235,var(--bg-overlay-alpha,0.78)) 100%),
+    url('/john-salzarulo-wtjrpjZABcQ-unsplash.jpg');
+  background-size: 100% 100%, cover;
+  background-position: 0 0, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.zen-bg-local-alpine-lake {
+  position: relative;
+  background-color: #E5EAEE;
+  background-image:
+    linear-gradient(165deg, rgba(248,251,253,var(--bg-overlay-alpha,0.8)) 0%, rgba(240,246,250,var(--bg-overlay-alpha,0.76)) 50%, rgba(232,242,247,var(--bg-overlay-alpha,0.76)) 100%),
+    url('/mark-koch-KiRlN3jjVNU-unsplash.jpg');
+  background-size: 100% 100%, cover;
+  background-position: 0 0, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.zen-bg-local-sunrise {
+  position: relative;
+  background-color: #EDE8E2;
+  background-image:
+    linear-gradient(165deg, rgba(252,249,245,var(--bg-overlay-alpha,0.78)) 0%, rgba(247,242,235,var(--bg-overlay-alpha,0.76)) 50%, rgba(242,236,228,var(--bg-overlay-alpha,0.76)) 100%),
+    url('/urban-vintage-78A265wPiO4-unsplash.jpg');
+  background-size: 100% 100%, cover;
+  background-position: 0 0, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.zen-bg-local-misty-hills {
+  position: relative;
+  background-color: #E8EBE6;
+  background-image:
+    linear-gradient(165deg, rgba(248,251,248,var(--bg-overlay-alpha,0.78)) 0%, rgba(242,247,242,var(--bg-overlay-alpha,0.76)) 50%, rgba(236,243,236,var(--bg-overlay-alpha,0.76)) 100%),
+    url('/v2osk-1Z2niiBPg5A-unsplash.jpg');
+  background-size: 100% 100%, cover;
+  background-position: 0 0, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.zen-bg-local-vista {
+  position: relative;
+  background-color: #EDEBE8;
+  background-image:
+    linear-gradient(165deg, rgba(252,251,248,var(--bg-overlay-alpha,0.78)) 0%, rgba(247,246,242,var(--bg-overlay-alpha,0.76)) 50%, rgba(242,239,232,var(--bg-overlay-alpha,0.76)) 100%),
+    url('/hoach-le-dinh-PeRt3uMmjYM-unsplash.jpg');
+  background-size: 100% 100%, cover;
+  background-position: 0 0, center;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.dark .zen-bg-local-valley,
+.dark .zen-bg-local-misty-peaks,
+.dark .zen-bg-local-stones,
+.dark .zen-bg-local-alpine-lake,
+.dark .zen-bg-local-sunrise,
+.dark .zen-bg-local-misty-hills,
+.dark .zen-bg-local-vista {
+  background-color: #1A1915;
+  background-image: linear-gradient(165deg, #1E1D1A 0%, #1C1B18 50%, #1A1915 100%);
+  background-size: 100% 100%;
+}
+
 .sidebar-bg {
   background: linear-gradient(180deg, rgba(253,252,250,0.92) 0%, rgba(248,246,242,0.88) 50%, rgba(243,241,235,0.9) 100%);
 }
 
 .dark .sidebar-bg {
   background: linear-gradient(180deg, rgba(30,29,26,0.95) 0%, rgba(26,25,21,0.92) 100%);
+}
+
+/* Focused field highlight: ring + soft glow */
+.focus-glow {
+  outline: none;
+}
+.focus-glow:focus-visible {
+  box-shadow: 0 0 0 2px var(--bg-panel, #fff), 0 0 0 4px rgba(20, 184, 166, 0.45);
+}
+.dark .focus-glow:focus-visible {
+  box-shadow: 0 0 0 2px var(--bg-panel), 0 0 0 4px rgba(45, 212, 191, 0.4);
+}
+
+/* Glow when a step/task or idea was just added */
+@keyframes glow-added {
+  0% {
+    box-shadow: 0 0 0 0 rgba(20, 184, 166, 0), 0 0 20px 4px rgba(20, 184, 166, 0.35);
+  }
+  40% {
+    box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.2), 0 0 28px 8px rgba(20, 184, 166, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.1), 0 0 12px 2px rgba(20, 184, 166, 0.15);
+  }
+}
+.glow-added {
+  animation: glow-added 1.6s ease-out forwards;
+}
+
+/* Idea pill glow when open / after adding */
+@keyframes idea-pill-glow {
+  0% {
+    box-shadow: 0 0 24px 6px rgba(20, 184, 166, 0.35), 0 4px 14px rgba(61, 107, 107, 0.15);
+  }
+  60% {
+    box-shadow: 0 0 32px 10px rgba(20, 184, 166, 0.25), 0 4px 14px rgba(61, 107, 107, 0.12);
+  }
+  100% {
+    box-shadow: 0 4px 14px rgba(61, 107, 107, 0.12);
+  }
+}
+.idea-pill-just-added {
+  animation: idea-pill-glow 1.5s ease-out forwards;
+}
+
+/* Gradient swirl / attention pulse – theme teal & sage, for search and highlighted fields */
+@keyframes attention-swirl-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2), 0 0 10px 1px rgba(20, 184, 166, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.35), 0 0 14px 3px rgba(139, 159, 130, 0.2);
+  }
+}
+.attention-swirl {
+  animation: attention-swirl-glow 2.2s ease-in-out infinite;
+}
+
+/* Theme colors for animations: teal-dark #3D6B6B, sage #8B9F82, terracotta #B8956E, purple-glow #A78BFA, teal-light #9BB5B5 */
+/* Card "just deposited" into Future: multi-color gradient outline */
+@keyframes deposit-outline {
+  0% {
+    box-shadow: 0 0 0 2px rgba(61, 107, 107, 0.5), 0 0 0 4px rgba(139, 159, 130, 0.25), 0 0 16px 2px rgba(61, 107, 107, 0.35);
+  }
+  20% {
+    box-shadow: 0 0 0 3px rgba(139, 159, 130, 0.5), 0 0 0 6px rgba(184, 149, 110, 0.25), 0 0 20px 3px rgba(139, 159, 130, 0.3);
+  }
+  40% {
+    box-shadow: 0 0 0 3px rgba(184, 149, 110, 0.45), 0 0 0 6px rgba(167, 139, 250, 0.25), 0 0 22px 3px rgba(184, 149, 110, 0.28);
+  }
+  60% {
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.4), 0 0 0 6px rgba(61, 107, 107, 0.3), 0 0 20px 3px rgba(167, 139, 250, 0.25);
+  }
+  80% {
+    box-shadow: 0 0 0 3px rgba(155, 181, 181, 0.45), 0 0 0 6px rgba(139, 159, 130, 0.28), 0 0 18px 3px rgba(155, 181, 181, 0.28);
+  }
+  100% {
+    box-shadow: 0 0 0 2px rgba(61, 107, 107, 0.2), 0 0 0 4px rgba(139, 159, 130, 0.12), 0 0 10px 1px rgba(61, 107, 107, 0.15);
+  }
+}
+.deposit-highlight {
+  animation: deposit-outline 2.5s ease-out forwards;
+}
+
+/* Sidebar Future section flash – multi-color */
+@keyframes future-section-flash {
+  0% {
+    background-color: rgba(61, 107, 107, 0.22);
+    box-shadow: 0 0 0 2px rgba(61, 107, 107, 0.4);
+  }
+  33% {
+    background-color: rgba(139, 159, 130, 0.2);
+    box-shadow: 0 0 0 3px rgba(139, 159, 130, 0.35);
+  }
+  66% {
+    background-color: rgba(184, 149, 110, 0.18);
+    box-shadow: 0 0 0 3px rgba(184, 149, 110, 0.3);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+.future-section-flash {
+  animation: future-section-flash 1.5s ease-out forwards;
+}
+.dark .future-section-flash {
+  animation: future-section-flash-dark 1.5s ease-out forwards;
+}
+@keyframes future-section-flash-dark {
+  0% {
+    background-color: rgba(61, 107, 107, 0.25);
+    box-shadow: 0 0 0 2px rgba(155, 181, 181, 0.4);
+  }
+  33% {
+    background-color: rgba(139, 159, 130, 0.2);
+    box-shadow: 0 0 0 3px rgba(139, 159, 130, 0.35);
+  }
+  66% {
+    background-color: rgba(167, 139, 250, 0.18);
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+/* Future lightbulb icon strobe when a new idea is added */
+@keyframes future-icon-strobe {
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  25% { opacity: 0.7; filter: brightness(1.4); }
+  50% { opacity: 1; filter: brightness(1.1); }
+  75% { opacity: 0.85; filter: brightness(1.35); }
+}
+.future-icon-strobe {
+  animation: future-icon-strobe 1.2s ease-in-out 3;
+}
+
+/* Active mountain placeholder – next idea goes here */
+@keyframes empty-slot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(45, 90, 90, 0.25); }
+  50% { box-shadow: 0 0 0 6px rgba(45, 90, 90, 0.08); }
+}
+.empty-slot-active {
+  animation: empty-slot-pulse 2s ease-in-out infinite;
 }

@@ -32,7 +32,7 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-[var(--text)]">TaskFlow for Teams</h1>
+          <h1 className="text-2xl font-semibold text-[var(--text)]">Fókusz</h1>
           <p className="text-neutral-gray mt-1">Sign in to your workspace</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 rounded-card bg-white dark:bg-slate-800 p-6 shadow-card">
@@ -79,14 +79,14 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 rounded-lg bg-primary-blue text-white font-medium hover:opacity-90 disabled:opacity-50"
+            className="w-full py-2.5 rounded-lg bg-teal-dark text-white font-medium hover:opacity-90 disabled:opacity-50"
           >
             {loading ? 'Please wait...' : isSignUp ? 'Sign up' : 'Sign in'}
           </button>
           <button
             type="button"
             onClick={() => { setIsSignUp(!isSignUp); setMessage(null); }}
-            className="w-full text-sm text-primary-blue hover:underline"
+            className="w-full text-sm text-teal-dark hover:underline"
           >
             {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
           </button>
